@@ -23,8 +23,10 @@ class LeNetCallback(Callback):
                 "auroc": AUROC(task="multiclass", num_classes=num_classes),
             }
         )
-        
-    def on_validation_epoch_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
+
+    def on_validation_epoch_start(
+        self, trainer: Trainer, pl_module: LightningModule
+    ) -> None:
         self.metrics.to(pl_module.device)
 
     def on_validation_batch_end(
@@ -48,7 +50,7 @@ class LeNetCallback(Callback):
             sync_dist=True,
         )
         self.metrics.reset()
-        
+
     def on_test_epoch_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         self.metrics.to(pl_module.device)
 
