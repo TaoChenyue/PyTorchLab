@@ -51,7 +51,6 @@ class ImagePairDataModule(VisionDataModule):
             suffix_list=self.suffix_list,
             mode_A=self.mode_A,
             mode_B=self.mode_B,
-            align=self.align,
             transform=transforms,
             target_transform=target_transforms,
         )

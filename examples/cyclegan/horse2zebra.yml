@@ -1,5 +1,5 @@
 # lightning.pytorch==2.1.2
-seed_everything: true
+seed_everything: 1234
 trainer:
   accelerator: auto
   strategy: auto
@@ -10,7 +10,7 @@ trainer:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
       save_dir: lightning_logs
-      name: dcgan_mnist
+      name: cyclegan_horse2zebra
       version: null
       log_graph: false
       default_hp_metric: true
@@ -22,17 +22,13 @@ trainer:
       flush_secs: 120
       filename_suffix: ''
   callbacks:
-  - class_path: pytorchlab.models.dcgan.callbacks.DCGANCallback
+  - class_path: pytorchlab.models.cyclegan.callbacks.ShowImageCallback
     init_args:
-      latent_dim: 100
-      nums: 25
-      tag: dcgan_images
-      nrow: 5
+      name: cyclegan_image
+      limit_batches: 1
+      num_images: 4
+      nrow: 2
       padding: 2
-      normalize: false
-      value_range: null
-      scale_each: false
-      pad_value: 0.0
   fast_dev_run: false
   max_epochs: 200
   min_epochs: null
@@ -67,55 +63,62 @@ trainer:
   default_root_dir: null
 ckpt_path: null
 data:
-  class_path: pytorchlab.datamodules.pytorch.MNISTDataModule
+  class_path: pytorchlab.datamodules.image.ImagePairDataModule
   init_args:
-    train_root: dataset
-    test_root: dataset
+    A_name: horse
+    B_name: zebra
+    suffix_list:
+    - .jpg
+    - .png
+    - .bmp
+    mode_A: RGB
+    mode_B: RGB
+    train_root: dataset/horse2zebra/train
+    test_root: dataset/horse2zebra/test
     val_in_train: true
     val_split: 0.2
     split_seed: 42
     num_workers: 4
-    batch_size: 32
+    batch_size: 4
     shuffle: true
     pin_memory: true
     drop_last: false
-    transforms:
-      class_path: torchvision.transforms.Compose
-      init_args:
-        transforms:
-        - class_path: torchvision.transforms.Resize
-          init_args:
-            size: 32
-            # interpolation: BILINEAR
-            max_size: null
-            antialias: warn
-        - class_path: torchvision.transforms.ToTensor
+    transforms: null
     target_transforms: null
     train_transforms: null
     train_target_transforms: null
     test_transforms: null
     test_target_transforms: null
 model:
-  class_path: pytorchlab.models.dcgan.DCGAN
+  class_path: pytorchlab.models.cyclegan.CycleGAN
   init_args:
-    channel: 1
-    size: 32
-    latent_dim: 100
-    num_blocks: 3
-    base_features: 64
-    max_features: 512
-    criterion:
-      class_path: torch.nn.BCELoss
+    channel: 3
+    height: 256
+    width: 256
+    n_residual_blocks: 3
+    lambda_id: 5.0
+    lambda_cycle: 10.0
+    criterion_gan:
+      class_path: torch.nn.MSELoss
       init_args:
-        size_average: null
+        reduce: null
+        reduction: mean
+    criterion_cycle:
+      class_path: torch.nn.L1Loss
+      init_args:
+        reduce: null
+        reduction: mean
+    criterion_identity:
+      class_path: torch.nn.L1Loss
+      init_args:
         reduce: null
         reduction: mean
     optimizer_g:
       class_path: torch.optim.Adam
       init_args:
-        lr: 0.0002
+        lr: 0.0001
         betas:
-        - 0.5
+        - 0.9
         - 0.999
         eps: 1.0e-08
         weight_decay: 0.0
@@ -125,12 +128,27 @@ model:
         capturable: false
         differentiable: false
         fused: null
-    optimizer_d:
+    optimizer_d_a:
       class_path: torch.optim.Adam
       init_args:
-        lr: 0.0002
+        lr: 0.001
         betas:
-        - 0.5
+        - 0.9
+        - 0.999
+        eps: 1.0e-08
+        weight_decay: 0.0
+        amsgrad: false
+        foreach: null
+        maximize: false
+        capturable: false
+        differentiable: false
+        fused: null
+    optimizer_d_b:
+      class_path: torch.optim.Adam
+      init_args:
+        lr: 0.001
+        betas:
+        - 0.9
         - 0.999
         eps: 1.0e-08
         weight_decay: 0.0
