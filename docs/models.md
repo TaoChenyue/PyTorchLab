@@ -1,0 +1,1 @@
+1. LeNet5 [[Paper-1998]](https://doi.org/10.1109/5.726791)[[Code]](../src/pytorchlab/models/lenet/lenet.py)
