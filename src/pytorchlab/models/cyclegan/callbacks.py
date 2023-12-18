@@ -54,5 +54,6 @@ class ShowImageCallback(Callback):
             )
             save_image(
                 image,
-                self.save_path / f"epoch={pl_module.current_epoch}batch={batch_idx}.png",
+                self.save_path
+                / f"epoch={pl_module.current_epoch}batch={batch_idx}.png",
             )

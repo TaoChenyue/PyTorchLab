@@ -18,6 +18,7 @@ class CycleGAN(LightningModule):
         height: int = 256,
         width: int = 256,
         n_residual_blocks: int = 4,
+        base_features: int = 64,
         lambda_id: float = 5.0,
         lambda_cycle: float = 10.0,
         criterion_gan: LossCallable = nn.BCELoss,
@@ -34,11 +35,24 @@ class CycleGAN(LightningModule):
         self.height = height
         self.width = width
         self.channel = channel
-        input_shape = (channel, height, width)
-        self.G_AB = GeneratorResNet(input_shape, n_residual_blocks)
-        self.G_BA = GeneratorResNet(input_shape, n_residual_blocks)
-        self.D_A = Discriminator(input_shape)
-        self.D_B = Discriminator(input_shape)
+        self.G_AB = GeneratorResNet(
+            channel=channel,
+            num_residual_blocks=n_residual_blocks,
+            base_features=base_features,
+        )
+        self.G_BA = GeneratorResNet(
+            channel=channel,
+            num_residual_blocks=n_residual_blocks,
+            base_features=base_features,
+        )
+        self.D_A = Discriminator(
+            channel=channel,
+            base_features=base_features,
+        )
+        self.D_B = Discriminator(
+            channel=channel,
+            base_features=base_features,
+        )
         self.init_weights()
         self.lambda_id = lambda_id
         self.lambda_cycle = lambda_cycle

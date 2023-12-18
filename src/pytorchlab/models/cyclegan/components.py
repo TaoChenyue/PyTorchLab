@@ -1,4 +1,3 @@
-# see https://github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/cyclegan/cyclegan.py
 import torch.nn as nn
 
 
@@ -9,11 +8,6 @@ def init_weights(module: nn.Module):
         elif isinstance(m, nn.BatchNorm2d):
             nn.init.normal_(m.weight, 1.0, 0.02)
             nn.init.constant_(m.bias, 0)
-
-
-##############################
-#           RESNET
-##############################
 
 
 class ResidualBlock(nn.Module):
@@ -35,16 +29,19 @@ class ResidualBlock(nn.Module):
 
 
 class GeneratorResNet(nn.Module):
-    def __init__(self, input_shape, num_residual_blocks):
+    def __init__(
+        self,
+        channel: int,
+        num_residual_blocks: int,
+        base_features: int = 64,
+    ):
         super(GeneratorResNet, self).__init__()
 
-        channels = input_shape[0]
-
         # Initial convolution block
-        out_features = 64
+        out_features = base_features
         model = [
-            nn.ReflectionPad2d(channels),
-            nn.Conv2d(channels, out_features, 2 * channels + 1),
+            nn.ReflectionPad2d(channel),
+            nn.Conv2d(channel, out_features, 2 * channel + 1),
             nn.InstanceNorm2d(out_features),
             nn.ReLU(inplace=True),
         ]
@@ -77,8 +74,8 @@ class GeneratorResNet(nn.Module):
 
         # Output layer
         model += [
-            nn.ReflectionPad2d(channels),
-            nn.Conv2d(out_features, channels, 2 * channels + 1),
+            nn.ReflectionPad2d(channel),
+            nn.Conv2d(out_features, channel, 2 * channel + 1),
             nn.Tanh(),
         ]
 
@@ -88,22 +85,17 @@ class GeneratorResNet(nn.Module):
         return self.model(x)
 
 
-##############################
-#        Discriminator
-##############################
-
-
 class Discriminator(nn.Module):
-    def __init__(self, input_shape):
+    def __init__(
+        self,
+        channel: int,
+        base_features: int = 64,
+    ):
         super(Discriminator, self).__init__()
 
-        channels, height, width = input_shape
-
-        # Calculate output shape of image discriminator (PatchGAN)
-        self.output_shape = (1, height // 2**4, width // 2**4)
+        # self.output_shape = (1, height // 2**4, width // 2**4)
 
         def discriminator_block(in_filters, out_filters, normalize=True):
-            """Returns downsampling layers of each discriminator block"""
             layers = [nn.Conv2d(in_filters, out_filters, 4, stride=2, padding=1)]
             if normalize:
                 layers.append(nn.InstanceNorm2d(out_filters))
@@ -111,12 +103,12 @@ class Discriminator(nn.Module):
             return layers
 
         self.model = nn.Sequential(
-            *discriminator_block(channels, 64, normalize=False),
-            *discriminator_block(64, 128),
-            *discriminator_block(128, 256),
-            *discriminator_block(256, 512),
+            *discriminator_block(channel, base_features, normalize=False),
+            *discriminator_block(base_features, base_features * 2),
+            *discriminator_block(base_features * 2, base_features * 4),
+            *discriminator_block(base_features * 4, base_features * 8),
             nn.ZeroPad2d((1, 0, 1, 0)),
-            nn.Conv2d(512, 1, 4, padding=1),
+            nn.Conv2d(base_features * 8, 1, 4, padding=1),
         )
 
     def forward(self, img):
