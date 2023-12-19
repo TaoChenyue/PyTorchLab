@@ -27,7 +27,9 @@ trainer:
     init_args:
       name: zeroDCE_image
       limit_batches: 1
-      num_images: 5
+      num_images: 4
+      nrow: 2
+      padding: 2
   fast_dev_run: false
   max_epochs: 200
   min_epochs: null

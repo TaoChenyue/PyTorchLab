@@ -4,17 +4,15 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 
 from pytorchlab.models.zerodce.components import enhance_net_nopool
 
-from .criterions import L_TV, L_color, L_exp, L_spa
+from .criterions import TV_loss, color_loss, exp_loss, spa_loss
 
 
 class ZeroDCE(LightningModule):
     def __init__(self, channel: int, patch_size: int = 16, mean_val: float = 0.6):
         super().__init__()
         self.net = enhance_net_nopool(channel)
-        self.loss_tv = L_TV()
-        self.loss_spa = L_spa()
-        self.loss_color = L_color()
-        self.loss_exp = L_exp(patch_size, mean_val)
+        self.patch_size = patch_size
+        self.mean_val = mean_val
 
     def forward(self, x):
         return self.net(x)
@@ -25,10 +23,12 @@ class ZeroDCE(LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         enhance_image1, enhanced_image, A = self(x)
-        loss_tv = 200 * self.loss_tv(A)
-        loss_spa = torch.mean(self.loss_spa(enhance_image1, enhanced_image))
-        loss_col = 5 * torch.mean(self.loss_color(enhanced_image))
-        loss_exp = 10 * torch.mean(self.loss_exp(enhanced_image))
+        loss_tv = 200 * TV_loss(A)
+        loss_spa = torch.mean(spa_loss(enhance_image1, enhanced_image))
+        loss_col = 5 * torch.mean(color_loss(enhanced_image))
+        loss_exp = 10 * torch.mean(
+            exp_loss(enhanced_image, patch_size=self.patch_size, mean_val=self.mean_val)
+        )
         loss = loss_tv + loss_spa + loss_col + loss_exp
         self.log_dict(
             {

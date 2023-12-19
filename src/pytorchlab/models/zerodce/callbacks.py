@@ -6,8 +6,9 @@ from lightning import LightningModule, Trainer
 from lightning.pytorch import Callback
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torchmetrics import MetricCollection
-from torchmetrics.image import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
-from torchvision.utils import save_image, make_grid
+from torchmetrics.image import (PeakSignalNoiseRatio,
+                                StructuralSimilarityIndexMeasure)
+from torchvision.utils import make_grid, save_image
 
 
 class MetricsCallback(Callback):
@@ -113,5 +114,6 @@ class ShowImageCallback(Callback):
                     nrow=self.nrow,
                     padding=self.padding,
                 ),
-                self.save_path / f"epoch={pl_module.current_epoch}batch={batch_idx}.png",
+                self.save_path
+                / f"epoch={pl_module.current_epoch}batch={batch_idx}.png",
             )
