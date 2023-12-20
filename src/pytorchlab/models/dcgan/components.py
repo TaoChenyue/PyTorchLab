@@ -99,6 +99,7 @@ class Generator(nn.Module):
         Returns:
             torch.Tensor: (batch_size,channel,size,size)
         """
+        x = x.unsqueeze(dim=-1).unsqueeze(dim=-1)
         x = self.net(x)
         return x
 

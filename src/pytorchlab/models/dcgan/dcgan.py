@@ -82,7 +82,7 @@ class DCGAN(LightningModule):
         optimizer_g: torch.optim.Optimizer = self.optimizers()[0]
         optimizer_g.zero_grad()
         # Sample noise
-        z = torch.randn((batch_size, self.latent_dim, 1, 1)).to(self.device)
+        z = torch.randn(batch_size, self.latent_dim).to(self.device)
         # Generate images
         generated_imgs: torch.Tensor = self(z)
         # ground truth result (all true)
@@ -110,7 +110,7 @@ class DCGAN(LightningModule):
         optimizer_d: torch.optim.Optimizer = self.optimizers()[1]
         optimizer_d.zero_grad()
         # Sample noise
-        z = torch.randn((batch_size, self.latent_dim, 1, 1)).to(self.device)
+        z = torch.randn(batch_size, self.latent_dim).to(self.device)
         # Generate images
         generated_imgs: torch.Tensor = self(z)
         # ground truth/ fake result

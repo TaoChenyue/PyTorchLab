@@ -8,7 +8,7 @@ from torchmetrics.classification import (AUROC, Accuracy, F1Score, Precision,
                                          Recall, Specificity)
 
 
-class LeNetCallback(Callback):
+class ClassifyMetricsCallback(Callback):
     def __init__(self, num_classes: int = 10):
         super().__init__()
         # //////////////////////////////////////////////////

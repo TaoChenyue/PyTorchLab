@@ -22,13 +22,18 @@ trainer:
       flush_secs: 120
       filename_suffix: ''
   callbacks:
-  - class_path: pytorchlab.models.cyclegan.callbacks.ShowImageCallback
+  - class_path: pytorchlab.callbacks.image.ShowImageCallback
     init_args:
-      name: cyclegan_image
+      name: null
       limit_batches: 1
       num_images: 4
+      override: true
       nrow: 2
       padding: 2
+      normalize: false
+      value_range: null
+      scale_each: false
+      pad_value: 0.0
   fast_dev_run: false
   max_epochs: 200
   min_epochs: null
@@ -95,7 +100,7 @@ model:
     channel: 3
     height: 256
     width: 256
-    n_residual_blocks: 3
+    n_residual_blocks: 9
     base_features: 64
     lambda_id: 5.0
     lambda_cycle: 10.0
@@ -117,9 +122,9 @@ model:
     optimizer_g:
       class_path: torch.optim.Adam
       init_args:
-        lr: 0.0001
+        lr: 0.0002
         betas:
-        - 0.9
+        - 0.5
         - 0.999
         eps: 1.0e-08
         weight_decay: 0.0
@@ -132,9 +137,9 @@ model:
     optimizer_d_a:
       class_path: torch.optim.Adam
       init_args:
-        lr: 0.001
+        lr: 0.0002
         betas:
-        - 0.9
+        - 0.5
         - 0.999
         eps: 1.0e-08
         weight_decay: 0.0
@@ -147,7 +152,7 @@ model:
     optimizer_d_b:
       class_path: torch.optim.Adam
       init_args:
-        lr: 0.001
+        lr: 0.0002
         betas:
         - 0.9
         - 0.999

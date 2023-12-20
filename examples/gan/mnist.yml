@@ -22,12 +22,13 @@ trainer:
       flush_secs: 120
       filename_suffix: ''
   callbacks:
-  - class_path: pytorchlab.models.gan.callbacks.GANCallback
+  - class_path: pytorchlab.callbacks.gan.GANCallback
     init_args:
       latent_dim: 100
-      nums: 25
-      tag: gan_images
-      nrow: 5
+      nums: 9
+      tag: null
+      override: false
+      nrow: 3
       padding: 2
       normalize: false
       value_range: null

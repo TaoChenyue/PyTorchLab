@@ -10,7 +10,7 @@ trainer:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
       save_dir: lightning_logs
-      name: lenet5
+      name: lenet5_mnist
       version: null
       log_graph: false
       default_hp_metric: true
@@ -22,7 +22,7 @@ trainer:
       flush_secs: 120
       filename_suffix: ''
   callbacks:
-  - class_path: pytorchlab.models.lenet.callbacks.LeNetCallback
+  - class_path: pytorchlab.callbacks.classify.ClassifyMetricsCallback
     init_args:
       num_classes: 10
   fast_dev_run: false
