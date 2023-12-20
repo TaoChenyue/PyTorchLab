@@ -1,5 +1,5 @@
 # lightning.pytorch==2.1.2
-seed_everything: true
+seed_everything: 1234
 trainer:
   accelerator: auto
   strategy: auto
@@ -10,7 +10,7 @@ trainer:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
       save_dir: lightning_logs
-      name: gan_mnist
+      name: lenet5_mnist
       version: null
       log_graph: false
       default_hp_metric: true
@@ -22,20 +22,11 @@ trainer:
       flush_secs: 120
       filename_suffix: ''
   callbacks:
-  - class_path: pytorchlab.callbacks.gan.GANCallback
+  - class_path: pytorchlab.callbacks.classify.ClassifyMetricsCallback
     init_args:
-      latent_dim: 100
-      nums: 9
-      tag: null
-      override: false
-      nrow: 3
-      padding: 2
-      normalize: false
-      value_range: null
-      scale_each: false
-      pad_value: 0.0
+      num_classes: 10
   fast_dev_run: false
-  max_epochs: 200
+  max_epochs: 10
   min_epochs: null
   max_steps: -1
   min_steps: null
@@ -87,47 +78,17 @@ data:
     test_transforms: null
     test_target_transforms: null
 model:
-  class_path: pytorchlab.models.gan.GAN
+  class_path: pytorchlab.models.lenet.LeNet5
   init_args:
-    latent_dim: 100
     channel: 1
     height: 28
     width: 28
-    hidden_layers: 4
-    hidden_layer_nodes: 128
+    num_classes: 10
     criterion:
-      class_path: torch.nn.BCELoss
+      class_path: torch.nn.CrossEntropyLoss
       init_args:
         size_average: null
+        ignore_index: -100
         reduce: null
         reduction: mean
-    optimizer_g:
-      class_path: torch.optim.Adam
-      init_args:
-        lr: 0.0002
-        betas:
-        - 0.5
-        - 0.999
-        eps: 1.0e-08
-        weight_decay: 0.0
-        amsgrad: false
-        foreach: null
-        maximize: false
-        capturable: false
-        differentiable: false
-        fused: null
-    optimizer_d:
-      class_path: torch.optim.Adam
-      init_args:
-        lr: 0.0002
-        betas:
-        - 0.5
-        - 0.999
-        eps: 1.0e-08
-        weight_decay: 0.0
-        amsgrad: false
-        foreach: null
-        maximize: false
-        capturable: false
-        differentiable: false
-        fused: null
+        label_smoothing: 0.0

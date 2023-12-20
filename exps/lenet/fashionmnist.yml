@@ -1,5 +1,5 @@
 # lightning.pytorch==2.1.2
-seed_everything: true
+seed_everything: 1234
 trainer:
   accelerator: auto
   strategy: auto
@@ -10,7 +10,7 @@ trainer:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
       save_dir: lightning_logs
-      name: lenet5_mnist
+      name: lenet5_fashionmnist
       version: null
       log_graph: false
       default_hp_metric: true
@@ -26,7 +26,7 @@ trainer:
     init_args:
       num_classes: 10
   fast_dev_run: false
-  max_epochs: 10
+  max_epochs: 20
   min_epochs: null
   max_steps: -1
   min_steps: null
@@ -59,7 +59,7 @@ trainer:
   default_root_dir: null
 ckpt_path: null
 data:
-  class_path: pytorchlab.datamodules.pytorch.MNISTDataModule
+  class_path: pytorchlab.datamodules.pytorch.FashionMNISTDataModule
   init_args:
     train_root: dataset
     test_root: dataset
