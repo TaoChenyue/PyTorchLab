@@ -10,7 +10,7 @@ trainer:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
       save_dir: lightning_logs
-      name: dcgan_mnist
+      name: dcgan_fashionmnist
       version: null
       log_graph: false
       default_hp_metric: true
@@ -68,7 +68,7 @@ trainer:
   default_root_dir: null
 ckpt_path: null
 data:
-  class_path: pytorchlab.datamodules.pytorch.MNISTDataModule
+  class_path: pytorchlab.datamodules.pytorch.FashionMNISTDataModule
   init_args:
     train_root: dataset
     test_root: dataset

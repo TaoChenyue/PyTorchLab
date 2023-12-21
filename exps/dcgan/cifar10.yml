@@ -10,7 +10,7 @@ trainer:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
       save_dir: lightning_logs
-      name: dcgan_mnist
+      name: dcgan_cifar10
       version: null
       log_graph: false
       default_hp_metric: true
@@ -68,7 +68,7 @@ trainer:
   default_root_dir: null
 ckpt_path: null
 data:
-  class_path: pytorchlab.datamodules.pytorch.MNISTDataModule
+  class_path: pytorchlab.datamodules.pytorch.CIFAR10DataModule
   init_args:
     train_root: dataset
     test_root: dataset
@@ -80,17 +80,7 @@ data:
     shuffle: true
     pin_memory: true
     drop_last: false
-    transforms:
-      class_path: torchvision.transforms.Compose
-      init_args:
-        transforms:
-        - class_path: torchvision.transforms.Resize
-          init_args:
-            size: 32
-            # interpolation: BILINEAR
-            max_size: null
-            antialias: warn
-        - class_path: torchvision.transforms.ToTensor
+    transforms: null
     target_transforms: null
     train_transforms: null
     train_target_transforms: null
@@ -99,13 +89,13 @@ data:
 model:
   class_path: pytorchlab.models.dcgan.DCGAN
   init_args:
-    channel: 1
+    channel: 3
     size: 32
     latent_dim: 100
     hidden_layers:
+    - 512
+    - 256
     - 128
-    - 64
-    - 32
     criterion:
       class_path: torch.nn.BCELoss
       init_args:

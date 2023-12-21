@@ -79,9 +79,7 @@ class DCGAN(LightningModule):
         # Generate images
         generated_imgs: torch.Tensor = self(z)
         # ground truth result (all true)
-        valid = torch.ones(
-            (batch_size, 1, self.discriminator.out_size, self.discriminator.out_size)
-        ).to(self.device)
+        valid = torch.ones(batch_size, 1).to(self.device)
         g_loss: torch.Tensor = self.criterion(self.discriminator(generated_imgs), valid)
         # loss backward
         self.manual_backward(g_loss)
@@ -107,12 +105,8 @@ class DCGAN(LightningModule):
         # Generate images
         generated_imgs: torch.Tensor = self(z)
         # ground truth/ fake result
-        real = torch.ones(
-            (batch_size, 1, self.discriminator.out_size, self.discriminator.out_size)
-        ).to(self.device)
-        fake = torch.zeros(
-            (batch_size, 1, self.discriminator.out_size, self.discriminator.out_size)
-        ).to(self.device)
+        real = torch.ones(batch_size, 1).to(self.device)
+        fake = torch.zeros(batch_size, 1).to(self.device)
         real_loss = self.criterion(self.discriminator(x), real)
         fake_loss = self.criterion(self.discriminator(generated_imgs), fake)
         d_loss = real_loss + fake_loss
