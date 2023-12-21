@@ -5,7 +5,7 @@ from lightning.pytorch import LightningModule
 from torch import nn
 from torch.optim import Optimizer
 
-from .components import Discriminator, Generator
+from pytorchlab.models._base.gan.conv import ConvDiscriminator, ConvGenerator
 
 OptimizerCallable = Callable[[Iterable], Optimizer]
 LossCallable = Callable[[Iterable], nn.Module]
@@ -17,9 +17,7 @@ class DCGAN(LightningModule):
         channel: int = 3,
         size: int = 64,
         latent_dim: int = 64,
-        num_blocks: int = 4,
-        base_features: int = 64,
-        max_features: int = 512,
+        hidden_layers: list[int] = [128, 64, 32, 16],
         criterion: LossCallable = nn.BCELoss,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
@@ -30,20 +28,15 @@ class DCGAN(LightningModule):
         # init model
         self.latent_dim = latent_dim
         self.size = size
-        self.max_features = max_features
-        self.generator = Generator(
+        self.generator = ConvGenerator(
+            channel=channel,
             latent_dim=latent_dim,
-            channel=channel,
-            num_blocks=num_blocks,
-            base_features=base_features,
-            max_features=max_features,
+            hidden_layers=hidden_layers,
         )
-        self.discriminator = Discriminator(
+        hidden_layers.reverse()
+        self.discriminator = ConvDiscriminator(
             channel=channel,
-            size=size,
-            num_blocks=num_blocks,
-            base_features=base_features,
-            max_features=max_features,
+            hidden_layers=hidden_layers,
         )
         self.criterion = criterion()
         self.optimizer_g = optimizer_g
