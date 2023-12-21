@@ -1,5 +1,5 @@
 # lightning.pytorch==2.1.2
-seed_everything: true
+seed_everything: 1234
 trainer:
   accelerator: auto
   strategy: auto
@@ -89,12 +89,14 @@ data:
 model:
   class_path: pytorchlab.models.gan.GAN
   init_args:
-    latent_dim: 100
     channel: 1
     height: 28
     width: 28
-    hidden_layers: 4
-    hidden_layer_nodes: 128
+    latent_dim: 100
+    hidden_layers:
+    - 256
+    - 512
+    - 1024
     criterion:
       class_path: torch.nn.BCELoss
       init_args:

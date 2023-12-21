@@ -25,10 +25,10 @@ trainer:
   - class_path: pytorchlab.callbacks.gan.GANCallback
     init_args:
       latent_dim: 100
-      nums: 9
+      nums: 25
       tag: null
       override: false
-      nrow: 3
+      nrow: 5
       padding: 2
       normalize: false
       value_range: null
