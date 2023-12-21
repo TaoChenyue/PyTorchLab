@@ -1,6 +1,6 @@
 ﻿from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 
 def make_gif(
@@ -28,10 +28,19 @@ def make_gif(
     """
     path_list: list[Path] = list(Path(image_dir).glob(f"*.{suffix}"))
     path_list.sort(key=lambda x: int(x.stem.split("_")[-1]))
-    image_list: list[Image.Image] = [Image.open(x) for x in path_list]
     if end is None:
-        end = len(image_list)
-    image_list = image_list[start:end:step]
+        end = len(path_list)
+    path_list = path_list[start:end:step] + [path_list[end - 1]]
+    image_list: list[Image.Image] = []
+    for x in path_list:
+        img = Image.open(x)
+        width, height = img.size
+        result = Image.new("RGB", (width, height + 20), "white")
+        result.paste(img, (0, 20))
+        draw = ImageDraw.Draw(result)
+        font = ImageFont.load_default(size=16)
+        draw.text((0, 0), f"{x.stem}", font=font, fill=(0, 0, 0))
+        image_list.append(result)
     image_list[0].save(
         save_path,
         format="GIF",
