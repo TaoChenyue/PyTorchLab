@@ -4,18 +4,17 @@ from torch import nn
 
 from pytorchlab.type_hint import LossCallable, OptimizerCallable
 
-from .components import Discriminator, Generator
+from pytorchlab.models._base.gan.linear import LinearGenerator, LinearDiscriminator
 
 
 class GAN(LightningModule):
     def __init__(
         self,
-        latent_dim: int,
         channel: int,
         height: int,
         width: int,
-        hidden_layers: int = 3,
-        hidden_layer_nodes: int = 64,
+        latent_dim: int,
+        hidden_layers: list[int] = [256, 512, 1024],
         criterion: LossCallable = nn.BCELoss,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
@@ -25,20 +24,19 @@ class GAN(LightningModule):
         self.automatic_optimization = False
         # init model
         self.latent_dim = latent_dim
-        self.generator: nn.Module = Generator(
+        self.generator: nn.Module = LinearGenerator(
             channel=channel,
             height=height,
             width=width,
             latent_dim=latent_dim,
             hidden_layers=hidden_layers,
-            hidden_layer_nodes=hidden_layer_nodes,
         )
-        self.discriminator: nn.Module = Discriminator(
+        hidden_layers.reverse()
+        self.discriminator: nn.Module = LinearDiscriminator(
             channel=channel,
             height=height,
             width=width,
             hidden_layers=hidden_layers,
-            hidden_layer_nodes=hidden_layer_nodes,
         )
         self.criterion = criterion()
         self.optimizer_g = optimizer_g
