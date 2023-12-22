@@ -291,7 +291,10 @@ class NLayerDiscriminator(nn.Module):
             activation,
         ]
 
-        layers += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=3, stride=1, padding=1)]
+        layers += [
+            nn.Conv2d(ndf * nf_mult, 1, kernel_size=3, stride=1, padding=1),
+            nn.Sigmoid(),
+        ]
         self.model = nn.Sequential(*layers)
 
     def forward(self, input):

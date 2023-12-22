@@ -1,1 +1,1 @@
-from .pix2pix import Pix2Pix
+from .pix2pix import Pix2Pix_ResNet

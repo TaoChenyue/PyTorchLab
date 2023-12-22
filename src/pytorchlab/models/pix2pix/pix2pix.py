@@ -1,26 +1,27 @@
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
+from pytorchlab.type_hint import LossCallable, OptimizerCallable
 
 import torch
 from lightning.pytorch import LightningModule
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch import nn
-from torch.optim import Optimizer
 
-from .components import Discriminator, Generator
-
-OptimizerCallable = Callable[[Iterable], Optimizer]
-LossCallable = Callable[[Iterable], nn.Module]
+from pytorchlab.models._base.gan import ResNetGenerator, NLayerDiscriminator
 
 
-class Pix2Pix(LightningModule):
+class Pix2Pix_ResNet(LightningModule):
     def __init__(
         self,
         in_channel: int,
         out_channel: int,
         height: int,
         width: int,
-        n_res_blocks: int = 6,
-        base_features: int = 64,
+        depth: int = 2,
+        num_blocks: int = 6,
+        nf: int = 64,
+        dropout: float = 0,
+        padding_cls: Callable = nn.ZeroPad2d,
+        norm_cls: Callable = nn.BatchNorm2d,
         criterion_gan: LossCallable = nn.MSELoss,
         criterion_image: LossCallable = nn.L1Loss,
         lambda_image_loss: float = 100,
@@ -39,18 +40,25 @@ class Pix2Pix(LightningModule):
         self.optimizer_g = optimizer_g
         self.optimizer_d = optimizer_d
 
-        self.generator = Generator(
+        self.generator = ResNetGenerator(
             in_channel,
             out_channel,
-            num_residual_blocks=n_res_blocks,
-            base_features=base_features,
+            depth=depth,
+            num_blocks=num_blocks,
+            ngf=nf,
+            dropout=dropout,
+            padding_cls=padding_cls,
+            norm_cls=norm_cls,
         )
-        self.discriminator = Discriminator(
-            in_channel, out_channel, base_features=base_features
+        self.discriminator = NLayerDiscriminator(
+            channel=in_channel + out_channel,
+            ndf=nf,
+            depth=depth,
+            norm_cls=norm_cls,
         )
 
-        self.d_out_height = height // 2**4
-        self.d_out_width = width // 2**4
+        self.d_out_height = height // 2**depth
+        self.d_out_width = width // 2**depth
 
     def forward(self, x):
         return self.generator(x)
@@ -85,7 +93,10 @@ class Pix2Pix(LightningModule):
             self.device
         )
         fake_B = self.generator(real_A)
-        gan_loss = self.criterion_gan(self.discriminator(real_A, fake_B), valid)
+        gan_loss = self.criterion_gan(
+            self.discriminator(torch.cat((real_A, fake_B), dim=1)),
+            valid,
+        )
         image_loss = self.criterion_image(fake_B, real_B)
         g_loss = gan_loss + self.lambda_image_loss * image_loss
         self.manual_backward(g_loss)
@@ -105,8 +116,14 @@ class Pix2Pix(LightningModule):
             self.device
         )
         fake_B = self.generator(real_A)
-        real_loss = self.criterion_gan(self.discriminator(real_A, real_B), valid)
-        fake_loss = self.criterion_gan(self.discriminator(real_A, fake_B), fake)
+        real_loss = self.criterion_gan(
+            self.discriminator(torch.cat((real_A, real_B), dim=1)),
+            valid,
+        )
+        fake_loss = self.criterion_gan(
+            self.discriminator(torch.cat((real_A, fake_B), dim=1)),
+            fake,
+        )
         d_loss = real_loss + fake_loss
         self.manual_backward(d_loss)
         optimizer_d.step()
