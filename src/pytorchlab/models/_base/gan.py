@@ -1,3 +1,5 @@
+from typing import Callable
+
 import torch
 from torch import nn
 
@@ -112,24 +114,28 @@ class ConvGenerator(nn.Module):
         return self.model(z)
 
 
-from typing import Callable
-
-from torch import nn
-
-
 class ResNetBlock(nn.Module):
     def __init__(
         self,
         channel: int,
-        num_blocks: int = 2,
         dropout: float = 0.0,
         padding_cls: Callable = nn.ZeroPad2d,
         norm_cls: Callable = nn.BatchNorm2d,
         activation: nn.Module = nn.ReLU(inplace=True),
     ):
+        """residual block
+
+        Args:
+            channel (int): channel of input image
+            num_blocks (int, optional): number of residual blocks. Defaults to 2.
+            dropout (float, optional): dropout rate. Defaults to 0.0.
+            padding_cls (Callable, optional): function name for padding. Defaults to nn.ZeroPad2d.
+            norm_cls (Callable, optional): function name for normalize. Defaults to nn.BatchNorm2d.
+            activation (nn.Module, optional): module for activate layer. Defaults to nn.ReLU(inplace=True).
+        """
         super().__init__()
         layers: list[nn.Module] = []
-        for i in range(num_blocks):
+        for i in range(2):
             layers += [
                 padding_cls(1),
                 nn.Conv2d(
@@ -157,7 +163,6 @@ class ResNetGenerator(nn.Module):
         out_channel: int,
         depth: int = 2,
         num_blocks: int = 6,
-        n_res_blocks: int = 2,
         ngf: int = 64,
         dropout: float = 0.0,
         padding_cls: Callable = nn.ZeroPad2d,
@@ -196,7 +201,6 @@ class ResNetGenerator(nn.Module):
             layers += [
                 ResNetBlock(
                     channel=ngf * mult,
-                    num_blocks=n_res_blocks,
                     dropout=dropout,
                     padding_cls=padding_cls,
                     norm_cls=norm_cls,
@@ -232,13 +236,81 @@ class ResNetGenerator(nn.Module):
         return self.model(x)
 
 
+class NLayerDiscriminator(nn.Module):
+    def __init__(
+        self,
+        channel: int,
+        ndf: int = 64,
+        depth: int = 3,
+        norm_cls: Callable = nn.BatchNorm2d,
+        activation: nn.Module = nn.LeakyReLU(0.2, inplace=True),
+    ):
+        """PatchGAN discriminator
+
+        Args:
+            channel (int): channel of input image
+            ndf (int, optional): number of filters on the first layer. Defaults to 64.
+            depth (int, optional): depth of discriminator,output size equals to size//2**depth. Defaults to 3.
+            norm_cls (Callable, optional): function name for norm. Defaults to nn.BatchNorm2d.
+            activation (nn.Module, optional): module for activate layer. Defaults to nn.LeakyReLU(0.2, inplace=True).
+        """
+        super().__init__()
+
+        layers: list[nn.Module] = [
+            nn.Conv2d(channel, ndf, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.2, True),
+        ]
+        nf_mult = 1
+        nf_mult_prev = 1
+        for n in range(1, depth):
+            nf_mult_prev = nf_mult
+            nf_mult = min(2**n, 8)
+            layers += [
+                nn.Conv2d(
+                    ndf * nf_mult_prev,
+                    ndf * nf_mult,
+                    kernel_size=4,
+                    stride=2,
+                    padding=1,
+                ),
+                norm_cls(ndf * nf_mult),
+                activation,
+            ]
+
+        nf_mult_prev = nf_mult
+        nf_mult = min(2**depth, 8)
+        layers += [
+            nn.Conv2d(
+                ndf * nf_mult_prev,
+                ndf * nf_mult,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            ),
+            norm_cls(ndf * nf_mult),
+            activation,
+        ]
+
+        layers += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=3, stride=1, padding=1)]
+        self.model = nn.Sequential(*layers)
+
+    def forward(self, input):
+        return self.model(input)
+
+
 if __name__ == "__main__":
     import torch
 
-    x = torch.randn(10, 3, 32, 32)
+    x = torch.randn(10, 3, 64, 64)
     g = ResNetGenerator(
         channel=3,
         out_channel=3,
     )
     y = g(x)
-    print(y.shape)
+    d = NLayerDiscriminator(
+        channel=3,
+        depth=4,
+    )
+    print(d)
+    out = d(y)
+    print(out.shape)
