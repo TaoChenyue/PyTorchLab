@@ -6,7 +6,8 @@ from lightning import LightningModule, Trainer
 from lightning.pytorch import Callback
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torchmetrics import MetricCollection
-from torchmetrics.image import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
+from torchmetrics.image import (PeakSignalNoiseRatio,
+                                StructuralSimilarityIndexMeasure)
 from torchvision.utils import make_grid, save_image
 
 
@@ -70,7 +71,7 @@ class IQAMetricsCallback(Callback):
 class ShowImageCallback(Callback):
     def __init__(
         self,
-        name: str | None= None,
+        name: str | None = None,
         limit_batches: int = 1,
         num_images: int = 4,
         override: bool = True,

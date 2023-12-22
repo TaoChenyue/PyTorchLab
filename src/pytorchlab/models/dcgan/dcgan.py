@@ -5,7 +5,7 @@ from lightning.pytorch import LightningModule
 from torch import nn
 from torch.optim import Optimizer
 
-from pytorchlab.models._base.gan.conv import ConvDiscriminator, ConvGenerator
+from pytorchlab.models._base.gan import ConvDiscriminator, ConvGenerator
 
 OptimizerCallable = Callable[[Iterable], Optimizer]
 LossCallable = Callable[[Iterable], nn.Module]

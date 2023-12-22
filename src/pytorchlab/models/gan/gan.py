@@ -2,9 +2,8 @@ import torch
 from lightning.pytorch import LightningModule
 from torch import nn
 
+from pytorchlab.models._base.gan import LinearDiscriminator, LinearGenerator
 from pytorchlab.type_hint import LossCallable, OptimizerCallable
-
-from pytorchlab.models._base.gan.linear import LinearGenerator, LinearDiscriminator
 
 
 class GAN(LightningModule):

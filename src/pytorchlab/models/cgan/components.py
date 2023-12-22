@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from pytorchlab.models._base.gan.linear import LinearGenerator, LinearDiscriminator
 
 
 class Generator(nn.Module):

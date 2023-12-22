@@ -4,7 +4,7 @@ from torch import nn
 
 from pytorchlab.type_hint import LossCallable, OptimizerCallable
 
-from .components import Generator, Discriminator
+from .components import Discriminator, Generator
 
 
 class CGAN(LightningModule):

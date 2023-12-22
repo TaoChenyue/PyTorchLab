@@ -1,7 +1,7 @@
 from typing import Callable, Iterable
 
 from torch import Tensor
-from torch.utils.data import Dataset, ConcatDataset
+from torch.utils.data import ConcatDataset, Dataset
 from torchvision import datasets
 
 from pytorchlab.datamodules.abstract.vision import VisionDataModule
