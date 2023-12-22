@@ -1,8 +1,3 @@
-<p align="center">
-  <a href="" rel="noopener">
- <img width=100px height=100px src="assets/logo.jpg" alt="Project logo"></a>
-</p>
-
 <h3 align="center">PyTorchLab</h3>
 
 <div align="center">
