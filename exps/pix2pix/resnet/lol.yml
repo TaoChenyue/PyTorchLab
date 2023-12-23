@@ -28,7 +28,7 @@ trainer:
       name: pix2pix_image
       limit_batches: 1
       num_images: 4
-      override: true
+      override: false
       nrow: 2
       padding: 2
       normalize: false
@@ -102,15 +102,16 @@ model:
     out_channel: 3
     height: 400
     width: 600
-    depth: 2
-    num_blocks: 6
+    g_depth: 3
+    d_depth: 5
+    num_blocks: 9
     nf: 64
     dropout: 0.0
-    padding_cls: torch.nn.ZeroPad2d
+    padding_cls:
+      class_path: torch.nn.ReflectionPad2d
     norm_cls:
-      class_path: torch.nn.BatchNorm2d
+      class_path: torch.nn.InstanceNorm2d
       init_args:
-        num_features: 1
         eps: 1.0e-05
         momentum: 0.1
         affine: true

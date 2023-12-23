@@ -7,6 +7,7 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch import nn
 
 from pytorchlab.models._base.gan import ResNetGenerator, NLayerDiscriminator
+from jsonargparse import lazy_instance
 
 
 class Pix2Pix_ResNet(LightningModule):
@@ -16,12 +17,13 @@ class Pix2Pix_ResNet(LightningModule):
         out_channel: int,
         height: int,
         width: int,
-        depth: int = 2,
+        g_depth: int = 2,
         num_blocks: int = 6,
+        d_depth: int = 4,
         nf: int = 64,
         dropout: float = 0,
-        padding_cls: Callable = nn.ZeroPad2d,
-        norm_cls: Callable = nn.BatchNorm2d,
+        padding_cls: ModuleCallable = nn.ZeroPad2d,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
         criterion_gan: ModuleCallable = nn.MSELoss,
         criterion_image: ModuleCallable = nn.L1Loss,
         lambda_image_loss: float = 100,
@@ -43,7 +45,7 @@ class Pix2Pix_ResNet(LightningModule):
         self.generator = ResNetGenerator(
             in_channel,
             out_channel,
-            depth=depth,
+            depth=g_depth,
             num_blocks=num_blocks,
             ngf=nf,
             dropout=dropout,
@@ -53,12 +55,12 @@ class Pix2Pix_ResNet(LightningModule):
         self.discriminator = NLayerDiscriminator(
             channel=in_channel + out_channel,
             ndf=nf,
-            depth=depth,
+            depth=d_depth,
             norm_cls=norm_cls,
         )
 
-        self.d_out_height = height // 2**depth
-        self.d_out_width = width // 2**depth
+        self.d_out_height = height // 2**d_depth
+        self.d_out_width = width // 2**d_depth
 
     def forward(self, x):
         return self.generator(x)

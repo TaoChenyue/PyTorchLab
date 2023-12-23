@@ -74,7 +74,7 @@ class ShowImageCallback(Callback):
         name: str | None = None,
         limit_batches: int = 1,
         num_images: int = 4,
-        override: bool = True,
+        override: bool = False,
         **kwargs,
     ) -> None:
         self.save_path = None

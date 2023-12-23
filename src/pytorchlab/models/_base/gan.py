@@ -118,8 +118,8 @@ class ResNetBlock(nn.Module):
         self,
         channel: int,
         dropout: float = 0.0,
-        padding_cls: ModuleCallable = nn.ZeroPad2d,
-        norm_cls: ModuleCallable = nn.BatchNorm2d,
+        padding_cls: ModuleCallable = nn.ReflectionPad2d,
+        norm_cls: ModuleCallable = nn.InstanceNorm2d,
         activation: nn.Module = nn.ReLU(inplace=True),
     ):
         """residual block
@@ -128,8 +128,8 @@ class ResNetBlock(nn.Module):
             channel (int): channel of input image
             num_blocks (int, optional): number of residual blocks. Defaults to 2.
             dropout (float, optional): dropout rate. Defaults to 0.0.
-            padding_cls (Callable, optional): function name for padding. Defaults to nn.ZeroPad2d.
-            norm_cls (Callable, optional): function name for normalize. Defaults to nn.BatchNorm2d.
+            padding_cls (ModuleCallable, optional): function name for padding. Defaults to nn.ReflectionPad2d.
+            norm_cls (ModuleCallable, optional): function name for normalize. Defaults to nn.InstanceNorm2d.
             activation (nn.Module, optional): module for activate layer. Defaults to nn.ReLU(inplace=True).
         """
         super().__init__()
@@ -164,8 +164,8 @@ class ResNetGenerator(nn.Module):
         num_blocks: int = 6,
         ngf: int = 64,
         dropout: float = 0.0,
-        padding_cls: ModuleCallable = nn.ZeroPad2d,
-        norm_cls: ModuleCallable = nn.BatchNorm2d,
+        padding_cls: ModuleCallable = nn.ReflectionPad2d,
+        norm_cls: ModuleCallable = nn.InstanceNorm2d,
         activation: nn.Module = nn.ReLU(inplace=True),
     ):
         super().__init__()
@@ -241,7 +241,7 @@ class NLayerDiscriminator(nn.Module):
         channel: int,
         ndf: int = 64,
         depth: int = 3,
-        norm_cls: ModuleCallable = nn.BatchNorm2d,
+        norm_cls: ModuleCallable = nn.InstanceNorm2d,
         activation: nn.Module = nn.LeakyReLU(0.2, inplace=True),
     ):
         """PatchGAN discriminator
@@ -250,7 +250,7 @@ class NLayerDiscriminator(nn.Module):
             channel (int): channel of input image
             ndf (int, optional): number of filters on the first layer. Defaults to 64.
             depth (int, optional): depth of discriminator,output size equals to size//2**depth. Defaults to 3.
-            norm_cls (Callable, optional): function name for norm. Defaults to nn.BatchNorm2d.
+            norm_cls (ModuleCallable, optional): function name for norm. Defaults to nn.InstanceNorm2d.
             activation (nn.Module, optional): module for activate layer. Defaults to nn.LeakyReLU(0.2, inplace=True).
         """
         super().__init__()
