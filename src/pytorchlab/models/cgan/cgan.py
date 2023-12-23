@@ -2,7 +2,7 @@ import torch
 from lightning.pytorch import LightningModule
 from torch import nn
 
-from pytorchlab.type_hint import LossCallable, OptimizerCallable
+from pytorchlab.type_hint import ModuleCallable, OptimizerCallable
 
 from .components import Discriminator, Generator
 
@@ -16,7 +16,7 @@ class CGAN(LightningModule):
         num_classes: int,
         latent_dim: int,
         hidden_layers: list[int] = [256, 512, 1024],
-        criterion: LossCallable = nn.BCELoss,
+        criterion: ModuleCallable = nn.BCELoss,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
     ) -> None:

@@ -6,7 +6,7 @@ from lightning.pytorch import LightningModule
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import nn
 
-from pytorchlab.type_hint import LossCallable, OptimizerCallable
+from pytorchlab.type_hint import ModuleCallable, OptimizerCallable
 
 from .components import Discriminator, GeneratorResNet, init_weights
 
@@ -21,9 +21,9 @@ class CycleGAN(LightningModule):
         base_features: int = 64,
         lambda_id: float = 5.0,
         lambda_cycle: float = 10.0,
-        criterion_gan: LossCallable = nn.BCELoss,
-        criterion_cycle: LossCallable = nn.L1Loss,
-        criterion_identity: LossCallable = nn.L1Loss,
+        criterion_gan: ModuleCallable = nn.BCELoss,
+        criterion_cycle: ModuleCallable = nn.L1Loss,
+        criterion_identity: ModuleCallable = nn.L1Loss,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d_a: OptimizerCallable = torch.optim.Adam,
         optimizer_d_b: OptimizerCallable = torch.optim.Adam,

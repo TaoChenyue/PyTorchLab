@@ -8,7 +8,7 @@ from torch.optim import Optimizer
 from pytorchlab.models._base.gan import ConvDiscriminator, ConvGenerator
 
 OptimizerCallable = Callable[[Iterable], Optimizer]
-LossCallable = Callable[[Iterable], nn.Module]
+ModuleCallable = Callable[[Iterable], nn.Module]
 
 
 class DCGAN(LightningModule):
@@ -18,7 +18,7 @@ class DCGAN(LightningModule):
         size: int = 64,
         latent_dim: int = 64,
         hidden_layers: list[int] = [128, 64, 32, 16],
-        criterion: LossCallable = nn.BCELoss,
+        criterion: ModuleCallable = nn.BCELoss,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
     ) -> None:

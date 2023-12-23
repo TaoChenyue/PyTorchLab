@@ -1,5 +1,5 @@
 from typing import Any, Callable
-from pytorchlab.type_hint import LossCallable, OptimizerCallable
+from pytorchlab.type_hint import ModuleCallable, OptimizerCallable
 
 import torch
 from lightning.pytorch import LightningModule
@@ -22,8 +22,8 @@ class Pix2Pix_ResNet(LightningModule):
         dropout: float = 0,
         padding_cls: Callable = nn.ZeroPad2d,
         norm_cls: Callable = nn.BatchNorm2d,
-        criterion_gan: LossCallable = nn.MSELoss,
-        criterion_image: LossCallable = nn.L1Loss,
+        criterion_gan: ModuleCallable = nn.MSELoss,
+        criterion_image: ModuleCallable = nn.L1Loss,
         lambda_image_loss: float = 100,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,

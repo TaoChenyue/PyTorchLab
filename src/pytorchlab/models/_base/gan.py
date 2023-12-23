@@ -1,7 +1,6 @@
-from typing import Callable
-
 import torch
 from torch import nn
+from pytorchlab.type_hint import ModuleCallable
 
 
 class LinearGenerator(nn.Module):
@@ -119,8 +118,8 @@ class ResNetBlock(nn.Module):
         self,
         channel: int,
         dropout: float = 0.0,
-        padding_cls: Callable = nn.ZeroPad2d,
-        norm_cls: Callable = nn.BatchNorm2d,
+        padding_cls: ModuleCallable = nn.ZeroPad2d,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
         activation: nn.Module = nn.ReLU(inplace=True),
     ):
         """residual block
@@ -165,8 +164,8 @@ class ResNetGenerator(nn.Module):
         num_blocks: int = 6,
         ngf: int = 64,
         dropout: float = 0.0,
-        padding_cls: Callable = nn.ZeroPad2d,
-        norm_cls: Callable = nn.BatchNorm2d,
+        padding_cls: ModuleCallable = nn.ZeroPad2d,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
         activation: nn.Module = nn.ReLU(inplace=True),
     ):
         super().__init__()
@@ -242,7 +241,7 @@ class NLayerDiscriminator(nn.Module):
         channel: int,
         ndf: int = 64,
         depth: int = 3,
-        norm_cls: Callable = nn.BatchNorm2d,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
         activation: nn.Module = nn.LeakyReLU(0.2, inplace=True),
     ):
         """PatchGAN discriminator

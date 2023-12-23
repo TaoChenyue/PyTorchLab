@@ -3,7 +3,7 @@ from lightning.pytorch import LightningModule
 from torch import nn
 
 from pytorchlab.models._base.gan import LinearDiscriminator, LinearGenerator
-from pytorchlab.type_hint import LossCallable, OptimizerCallable
+from pytorchlab.type_hint import ModuleCallable, OptimizerCallable
 
 
 class GAN(LightningModule):
@@ -14,7 +14,7 @@ class GAN(LightningModule):
         width: int,
         latent_dim: int,
         hidden_layers: list[int] = [256, 512, 1024],
-        criterion: LossCallable = nn.BCELoss,
+        criterion: ModuleCallable = nn.BCELoss,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
     ) -> None:

@@ -4,7 +4,7 @@ import torch
 from lightning.pytorch import LightningModule
 from torch import nn
 
-from pytorchlab.type_hint import LossCallable
+from pytorchlab.type_hint import ModuleCallable
 
 
 class LeNet5(LightningModule):
@@ -14,7 +14,7 @@ class LeNet5(LightningModule):
         height: int = 28,
         width: int = 28,
         num_classes: int = 10,
-        criterion: LossCallable = nn.CrossEntropyLoss,
+        criterion: ModuleCallable = nn.CrossEntropyLoss,
     ):
         super().__init__()
         # //////////////////////////////////////////////////
