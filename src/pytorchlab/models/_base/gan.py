@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from pytorchlab.type_hint import ModuleCallable
+from jsonargparse import lazy_instance
 
 
 class LinearGenerator(nn.Module):
@@ -11,8 +12,8 @@ class LinearGenerator(nn.Module):
         width: int,
         latent_dim: int,
         hidden_layers: list[int] = [256, 512, 1024],
-        activation: nn.Module = nn.LeakyReLU(0.2),
-        output_activation: nn.Module = nn.Tanh(),
+        activation: nn.Module = lazy_instance(nn.LeakyReLU, negative_slope=0.2),
+        output_activation: nn.Module = lazy_instance(nn.Tanh),
     ):
         super().__init__()
         self.channel = channel
@@ -41,9 +42,9 @@ class LinearDiscriminator(nn.Module):
         height: int,
         width: int,
         hidden_layers: list[int] = [1024, 512, 256],
-        activation: nn.Module = nn.LeakyReLU(0.2),
+        activation: nn.Module = lazy_instance(nn.LeakyReLU, negative_slope=0.2),
         dropout: float = 0.3,
-        output_activation: nn.Module = nn.Sigmoid(),
+        output_activation: nn.Module = lazy_instance(nn.Sigmoid),
     ):
         super().__init__()
         self.channel = channel
@@ -72,8 +73,8 @@ class ConvGenerator(nn.Module):
         channel: int,
         latent_dim: int = 100,
         hidden_layers: list[int] = [128, 64, 32, 16],
-        activation: nn.Module = nn.ReLU(inplace=True),
-        out_activation: nn.Module = nn.Tanh(),
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        out_activation: nn.Module = lazy_instance(nn.Tanh),
     ):
         super().__init__()
         hidden_layers = hidden_layers + [channel]
@@ -120,7 +121,7 @@ class ResNetBlock(nn.Module):
         dropout: float = 0.0,
         padding_cls: ModuleCallable = nn.ReflectionPad2d,
         norm_cls: ModuleCallable = nn.InstanceNorm2d,
-        activation: nn.Module = nn.ReLU(inplace=True),
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
     ):
         """residual block
 
@@ -166,7 +167,7 @@ class ResNetGenerator(nn.Module):
         dropout: float = 0.0,
         padding_cls: ModuleCallable = nn.ReflectionPad2d,
         norm_cls: ModuleCallable = nn.InstanceNorm2d,
-        activation: nn.Module = nn.ReLU(inplace=True),
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
     ):
         super().__init__()
         layers: list[nn.Module] = []
@@ -242,7 +243,9 @@ class NLayerDiscriminator(nn.Module):
         ndf: int = 64,
         depth: int = 3,
         norm_cls: ModuleCallable = nn.InstanceNorm2d,
-        activation: nn.Module = nn.LeakyReLU(0.2, inplace=True),
+        activation: nn.Module = lazy_instance(
+            nn.LeakyReLU, negative_slope=0.2, inplace=True
+        ),
     ):
         """PatchGAN discriminator
 
@@ -257,7 +260,7 @@ class NLayerDiscriminator(nn.Module):
 
         layers: list[nn.Module] = [
             nn.Conv2d(channel, ndf, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2, True),
+            activation,
         ]
         nf_mult = 1
         nf_mult_prev = 1
