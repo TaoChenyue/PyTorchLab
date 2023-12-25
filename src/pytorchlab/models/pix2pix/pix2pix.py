@@ -1,13 +1,13 @@
-from typing import Any, Callable
-from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
+from typing import Any
 
 import torch
+from jsonargparse import lazy_instance
 from lightning.pytorch import LightningModule
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch import nn
 
-from pytorchlab.models._base.gan import ResNetGenerator, NLayerDiscriminator
-from jsonargparse import lazy_instance
+from pytorchlab.models._base.gan import NLayerDiscriminator, ResNetGenerator
+from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
 
 
 class Pix2Pix(LightningModule):

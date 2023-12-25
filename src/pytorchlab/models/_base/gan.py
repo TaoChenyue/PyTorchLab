@@ -1,7 +1,8 @@
 import torch
-from torch import nn
-from pytorchlab.type_hint import ModuleCallable
 from jsonargparse import lazy_instance
+from torch import nn
+
+from pytorchlab.type_hint import ModuleCallable
 
 
 class LinearGenerator(nn.Module):

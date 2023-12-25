@@ -1,9 +1,9 @@
+import random
 from pathlib import Path
 from typing import Any, Callable, Literal
 
 from PIL import Image
 from torch.utils.data import Dataset
-import random
 
 
 class ImagePairDataset(Dataset):
@@ -37,7 +37,7 @@ class ImagePairDataset(Dataset):
             [x for x in self.root_B.glob("*") if x.suffix in suffix_list],
             key=lambda x: x.stem,
         )
-        if len(self.paths_A)!=len(self.paths_B):
+        if len(self.paths_A) != len(self.paths_B):
             random.shuffle(self.paths_B)
 
     def __len__(self):

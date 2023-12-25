@@ -110,8 +110,8 @@ model:
       init_args:
         channel: 3
         out_channel: 3
-        depth: 2
-        num_blocks: 6
+        depth: 3
+        num_blocks: 9
         ngf: 64
         dropout: 0.0
         padding_cls:
@@ -134,7 +134,7 @@ model:
       init_args:
         channel: 6
         ndf: 64
-        depth: 3
+        depth: 5
         norm_cls:
           class_path: torch.nn.InstanceNorm2d
           init_args:
