@@ -20,8 +20,8 @@ class Pix2Pix(LightningModule):
         lambda_image_loss: float = 100,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
-        lr_g: LRSchedulerCallable = torch.optim.lr_scheduler.ConstantLR,
-        lr_d: LRSchedulerCallable = torch.optim.lr_scheduler.ConstantLR,
+        lr_g: LRSchedulerCallable | None = None,
+        lr_d: LRSchedulerCallable | None = None,
     ):
         super().__init__()
         # do not optimize model automatically
@@ -43,12 +43,18 @@ class Pix2Pix(LightningModule):
 
     def configure_optimizers(self) -> OptimizerLRScheduler:
         self.optimizer_g = self._optimizer_g(self.generator.parameters())
+        dict_g = {"optimizer": self.optimizer_g}
         self.optimizer_d = self._optimizer_d(self.discriminator.parameters())
-        self.lr_g = self._lr_g(self.optimizer_g)
-        self.lr_d = self._lr_d(self.optimizer_d)
+        dict_d = {"optimizer": self.optimizer_d}
+        if self._lr_g is not None:
+            self.lr_g = self._lr_g(self.optimizer_g)
+            dict_g["lr_scheduler"] = self.lr_g
+        if self._lr_d is not None:
+            self.lr_d = self._lr_d(self.optimizer_d)
+            dict_d["lr_scheduler"] = self.lr_d
         return (
-            {"optimizer": self.optimizer_g, "lr_scheduler": self.lr_g},
-            {"optimizer": self.optimizer_d, "lr_scheduler": self.lr_d},
+            dict_g,
+            dict_d,
         )
 
     def training_step(
@@ -83,7 +89,8 @@ class Pix2Pix(LightningModule):
         g_loss = gan_loss + self.lambda_image_loss * image_loss
         self.manual_backward(g_loss)
         self.optimizer_g.step()
-        self.lr_g.step()
+        if self._lr_g is not None:
+            self.lr_g.step()
         return g_loss
 
     def discriminator_step(self, batch: tuple[torch.Tensor, torch.Tensor]):
@@ -112,7 +119,8 @@ class Pix2Pix(LightningModule):
         d_loss = real_loss + fake_loss
         self.manual_backward(d_loss)
         self.optimizer_d.step()
-        self.lr_d.step()
+        if self._lr_d is not None:
+            self.lr_d.step()
         return d_loss
 
     def validation_step(
