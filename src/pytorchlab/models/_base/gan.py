@@ -121,7 +121,7 @@ class ResNetBlock(nn.Module):
         channel: int,
         dropout: float = 0.0,
         padding_cls: ModuleCallable = nn.ReflectionPad2d,
-        norm_cls: ModuleCallable = nn.InstanceNorm2d,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
         activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
     ):
         """residual block
@@ -160,14 +160,14 @@ class ResNetBlock(nn.Module):
 class ResNetGenerator(nn.Module):
     def __init__(
         self,
-        channel: int,
-        out_channel: int,
+        in_channels: int,
+        out_channels: int,
         depth: int = 2,
         num_blocks: int = 6,
         ngf: int = 64,
         dropout: float = 0.0,
         padding_cls: ModuleCallable = nn.ReflectionPad2d,
-        norm_cls: ModuleCallable = nn.InstanceNorm2d,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
         activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
     ):
         super().__init__()
@@ -175,7 +175,7 @@ class ResNetGenerator(nn.Module):
         layers += [
             padding_cls(1),
             nn.Conv2d(
-                channel,
+                in_channels,
                 ngf,
                 kernel_size=3,
                 stride=1,
@@ -225,7 +225,7 @@ class ResNetGenerator(nn.Module):
             padding_cls(3),
             nn.Conv2d(
                 ngf,
-                out_channel,
+                out_channels,
                 kernel_size=7,
                 padding=0,
             ),
@@ -237,13 +237,109 @@ class ResNetGenerator(nn.Module):
         return self.model(x)
 
 
+class UNetSkipConnectionBlock(nn.Module):
+    def __init__(
+        self,
+        last_channel: int,
+        channel: int,
+        dropout: float = 0.0,
+        submodule: nn.Module | None = None,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
+        down_relu: nn.Module = lazy_instance(
+            nn.LeakyReLU, negative_slope=0.2, inplace=True
+        ),
+        up_relu: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+    ):
+        super().__init__()
+        down_conv = nn.Conv2d(
+            last_channel,
+            channel,
+            kernel_size=4,
+            stride=2,
+            padding=1,
+        )
+        down_norm: nn.Module = norm_cls(channel)
+        up_conv = nn.ConvTranspose2d(
+            channel * (1 if submodule is None else 2),
+            last_channel,
+            kernel_size=4,
+            stride=2,
+            padding=1,
+        )
+        up_norm: nn.Module = norm_cls(last_channel)
+        layers: list[nn.Module] = [down_relu, down_conv, down_norm]
+        if submodule is not None:
+            layers.append(submodule)
+        layers += [up_relu, up_conv, up_norm]
+        if dropout != 0:
+            layers += [nn.Dropout(dropout)]
+        self.model = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return torch.cat([x, self.model(x)], dim=1)
+
+
+class UNetGenerator(nn.Module):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        depth: int = 8,
+        ngf: int = 64,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
+        down_relu: nn.Module = lazy_instance(
+            nn.LeakyReLU, negative_slope=0.2, inplace=True
+        ),
+        up_relu: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        dropout: float = 0.5,
+    ):
+        super().__init__()
+        unet_block = UNetSkipConnectionBlock(
+            last_channel=ngf * 8,
+            channel=ngf * 8,
+            submodule=None,
+            norm_cls=norm_cls,
+            down_relu=down_relu,
+            up_relu=up_relu,
+        )
+        for _ in range(depth - 5):
+            unet_block = UNetSkipConnectionBlock(
+                last_channel=ngf * 8,
+                channel=ngf * 8,
+                dropout=dropout,
+                submodule=unet_block,
+                norm_cls=norm_cls,
+                down_relu=down_relu,
+                up_relu=up_relu,
+            )
+        for i in range(2, -1, -1):
+            unet_block = UNetSkipConnectionBlock(
+                last_channel=ngf * (1 << i),
+                channel=ngf * (1 << (i + 1)),
+                submodule=unet_block,
+                norm_cls=norm_cls,
+                down_relu=down_relu,
+                up_relu=up_relu,
+            )
+        self.model = nn.Sequential(
+            nn.Conv2d(in_channels, ngf, 4, 2, 1),
+            unet_block,
+            up_relu,
+            nn.ConvTranspose2d(ngf * 2, out_channels, 4, 2, 1),
+            nn.Tanh(),
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+
 class NLayerDiscriminator(nn.Module):
     def __init__(
         self,
         channel: int,
         ndf: int = 64,
         depth: int = 3,
-        norm_cls: ModuleCallable = nn.InstanceNorm2d,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
         activation: nn.Module = lazy_instance(
             nn.LeakyReLU, negative_slope=0.2, inplace=True
         ),
@@ -296,7 +392,6 @@ class NLayerDiscriminator(nn.Module):
 
         layers += [
             nn.Conv2d(ndf * nf_mult, 1, kernel_size=3, stride=1, padding=1),
-            nn.Sigmoid(),
         ]
         self.model = nn.Sequential(*layers)
 
@@ -304,19 +399,45 @@ class NLayerDiscriminator(nn.Module):
         return self.model(input)
 
 
+class PixelDiscriminator(nn.Module):
+    def __init__(
+        self,
+        channel: int,
+        ndf: int = 64,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
+        activation: nn.Module = lazy_instance(
+            nn.LeakyReLU, negative_slope=0.2, inplace=True
+        ),
+    ):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Conv2d(channel, ndf, kernel_size=1, stride=1, padding=0),
+            activation,
+            nn.Conv2d(ndf, ndf * 2, kernel_size=1, stride=1, padding=0),
+            norm_cls(ndf * 2),
+            activation,
+            nn.Conv2d(ndf * 2, 1, kernel_size=1, stride=1, padding=0),
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+
 if __name__ == "__main__":
     import torch
 
-    x = torch.randn(10, 3, 64, 64)
-    g = ResNetGenerator(
-        channel=3,
-        out_channel=3,
+    x = torch.randn(10, 3, 256, 256)
+    g = UNetGenerator(
+        in_channels=3,
+        out_channels=3,
     )
+    # print(g)
     y = g(x)
+    print(y.shape)
     d = NLayerDiscriminator(
         channel=3,
         depth=4,
     )
-    print(d)
+    # print(d)
     out = d(y)
     print(out.shape)

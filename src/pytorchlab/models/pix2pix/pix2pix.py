@@ -6,14 +6,14 @@ from lightning.pytorch import LightningModule
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch import nn
 
-from pytorchlab.models._base.gan import NLayerDiscriminator, ResNetGenerator
+from pytorchlab.models._base.gan import NLayerDiscriminator, UNetGenerator
 from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
 
 
 class Pix2Pix(LightningModule):
     def __init__(
         self,
-        generator: nn.Module = lazy_instance(ResNetGenerator),
+        generator: nn.Module = lazy_instance(UNetGenerator),
         discriminator: nn.Module = lazy_instance(NLayerDiscriminator),
         criterion_gan: nn.Module = lazy_instance(nn.MSELoss),
         criterion_image: nn.Module = lazy_instance(nn.L1Loss),
@@ -66,8 +66,8 @@ class Pix2Pix(LightningModule):
             {
                 "g_loss": g_loss,
                 "d_loss": d_loss,
-                "lr_g": self.optimizer_g.param_groups[0]["lr"],
-                "lr_d": self.optimizer_d.param_groups[0]["lr"],
+                # "lr_g": self.optimizer_g.param_groups[0]["lr"],
+                # "lr_d": self.optimizer_d.param_groups[0]["lr"],
             },
             sync_dist=True,
             prog_bar=True,
