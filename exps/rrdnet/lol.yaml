@@ -1,0 +1,94 @@
+# lightning.pytorch==2.1.2
+seed_everything: 1234
+trainer:
+  accelerator: auto
+  strategy: auto
+  devices: auto
+  num_nodes: 1
+  precision: null
+  logger:
+    class_path: lightning.pytorch.loggers.TensorBoardLogger
+    init_args:
+      save_dir: lightning_logs
+      name: rrdnet_lol
+      version: null
+      log_graph: false
+      default_hp_metric: true
+      prefix: ''
+      sub_dir: null
+      comment: ''
+      purge_step: null
+      max_queue: 10
+      flush_secs: 120
+      filename_suffix: ''
+  callbacks:
+  - class_path: pytorchlab.callbacks.image.IQAMetricsCallback
+  - class_path: pytorchlab.callbacks.image.ShowImageCallback
+    init_args:
+      num_images: 4
+      nrow: 2
+      padding: 2
+  fast_dev_run: false
+  max_epochs: 200
+  min_epochs: null
+  max_steps: -1
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  overfit_batches: 0.0
+  val_check_interval: null
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: null
+  log_every_n_steps: null
+  enable_checkpointing: null
+  enable_progress_bar: null
+  enable_model_summary: null
+  accumulate_grad_batches: 1
+  gradient_clip_val: null
+  gradient_clip_algorithm: null
+  deterministic: null
+  benchmark: null
+  inference_mode: true
+  use_distributed_sampler: true
+  profiler: null
+  detect_anomaly: false
+  barebones: false
+  plugins: null
+  sync_batchnorm: false
+  reload_dataloaders_every_n_epochs: 0
+  default_root_dir: null
+ckpt_path: null
+data:
+  class_path: pytorchlab.datamodules.vision.image_pair.ImagePairDataModule
+  init_args:
+    A_name: low
+    B_name: high
+    suffix_list:
+    - .jpg
+    - .png
+    - .bmp
+    mode_A: RGB
+    mode_B: RGB
+    train_root: dataset/LOL/our485
+    test_root: dataset/LOL/eval15
+    val_in_train: true
+    val_split: 0.2
+    split_seed: 42
+    num_workers: 4
+    batch_size: 4
+    shuffle: true
+    pin_memory: true
+    drop_last: false
+    transforms: null
+    target_transforms: null
+    train_transforms: null
+    train_target_transforms: null
+    test_transforms: null
+    test_target_transforms: null
+model:
+  class_path: pytorchlab.models.rrdnet.RRDNet
+  init_args:
+    channel: 3
