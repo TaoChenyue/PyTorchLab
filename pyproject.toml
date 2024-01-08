@@ -38,12 +38,8 @@ vision = [
 ]
 audio = ["torchaudio>=2.1.1"]
 text = ["torchtext>=0.16.1"]
-docs = [
-    "mkdocstrings-python>=1.7.5",
-]
-test = [
-    "pytest>=7.4.3",
-]
+docs = ["mkdocstrings-python>=1.7.5"]
+test = ["pytest>=7.4.3"]
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
@@ -58,9 +54,16 @@ autoflake = { cmd = [
     "--ignore-init-module-imports",
     "--in-place",
     "-r",
-    "src/",
-    "tests/",
 ] }
-black = "black src/ tests/"
-isort = "isort src/ tests/"
-format = { composite = ["autoflake", "black", "isort"] }
+format = { composite = [
+    "echo autoflake {args}",
+    "autoflake {args}",
+    "echo autoflake done",
+    "echo isort {args}",
+    "isort {args}",
+    "echo isort done",
+    "echo black {args}",
+    "black {args}",
+    "echo black done",
+] }
+formats = "pdm run format src/ tests/"
