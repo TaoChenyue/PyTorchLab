@@ -7,8 +7,14 @@ from lightning import LightningModule, Trainer
 from lightning.pytorch.callbacks import Callback
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torchmetrics import MetricCollection
-from torchmetrics.classification import (AUROC, Accuracy, F1Score, Precision,
-                                         Recall, Specificity)
+from torchmetrics.classification import (
+    AUROC,
+    Accuracy,
+    F1Score,
+    Precision,
+    Recall,
+    Specificity,
+)
 from torchvision.utils import save_image
 
 

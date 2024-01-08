@@ -1,8 +1,7 @@
 def test_LinearDiscriminator():
     import torch
 
-    from pytorchlab.modules.gans.discriminator.linear import \
-        LinearDiscriminator
+    from pytorchlab.modules.gans.discriminator.linear import LinearDiscriminator
 
     g = LinearDiscriminator(
         channel=1,
@@ -17,8 +16,9 @@ def test_LinearDiscriminator():
 def test_ConditionalLinearDiscriminator():
     import torch
 
-    from pytorchlab.modules.gans.discriminator.linear import \
-        ConditionalLinearDiscriminator
+    from pytorchlab.modules.gans.discriminator.linear import (
+        ConditionalLinearDiscriminator,
+    )
 
     g = ConditionalLinearDiscriminator(
         channel=1,

@@ -2,21 +2,22 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-def find_epoch(s:str):
-    index=s.find("epoch")
-    if index==-1:
+
+def find_epoch(s: str):
+    index = s.find("epoch")
+    if index == -1:
         raise ValueError("no epoch in the string")
-    index+=5
-    while(index<len(s) and not s[index].isdigit()):
-        index+=1
-    if index==len(s):
+    index += 5
+    while index < len(s) and not s[index].isdigit():
+        index += 1
+    if index == len(s):
         raise ValueError("no epoch value in the string")
     end = index
-    while(end<len(s) and s[end].isdigit()):
-        end+=1
+    while end < len(s) and s[end].isdigit():
+        end += 1
     result = s[index:end]
     return int(result)
-    
+
 
 def make_gif(
     save_path: str | Path,

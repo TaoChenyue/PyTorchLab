@@ -6,8 +6,7 @@ from torch import nn
 from pytorchlab.lr_scheduler import KeepLR
 from pytorchlab.modules.gans.discriminator.linear import LinearDiscriminator
 from pytorchlab.modules.gans.generator.linear import LinearGenerator
-from pytorchlab.type_hint import (LRSchedulerCallable, ModuleCallable,
-                                  OptimizerCallable)
+from pytorchlab.type_hint import LRSchedulerCallable, ModuleCallable, OptimizerCallable
 
 __all__ = ["GAN"]
 

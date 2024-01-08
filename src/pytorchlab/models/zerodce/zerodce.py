@@ -3,8 +3,7 @@ from lightning.pytorch import LightningModule
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 
 from pytorchlab.models.zerodce.components import enhance_net_nopool
-from pytorchlab.models.zerodce.criterions import (TV_loss, color_loss,
-                                                  exp_loss, spa_loss)
+from pytorchlab.models.zerodce.criterions import TV_loss, color_loss, exp_loss, spa_loss
 
 
 class ZeroDCE(LightningModule):

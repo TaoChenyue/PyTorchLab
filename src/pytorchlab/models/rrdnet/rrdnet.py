@@ -5,8 +5,12 @@ from lightning.pytorch import LightningModule
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 
 from .components import RRDNet as _RRDNet
-from .criterions import (illumination_smooth_loss, noise_loss,
-                         reconstruction_loss, reflectance_smooth_loss)
+from .criterions import (
+    illumination_smooth_loss,
+    noise_loss,
+    reconstruction_loss,
+    reflectance_smooth_loss,
+)
 
 
 class RRDNet(LightningModule):

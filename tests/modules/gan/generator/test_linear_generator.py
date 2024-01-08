@@ -17,8 +17,7 @@ def test_LinearGenerator():
 def test_ConditionalLinearGenerator():
     import torch
 
-    from pytorchlab.modules.gans.generator.linear import \
-        ConditionalLinearGenerator
+    from pytorchlab.modules.gans.generator.linear import ConditionalLinearGenerator
 
     g = ConditionalLinearGenerator(
         channel=1,

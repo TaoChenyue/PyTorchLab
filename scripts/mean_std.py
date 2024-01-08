@@ -1,6 +1,6 @@
 import torch
-from torch.utils.data import DataLoader, Dataset
 import torchvision
+from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
 

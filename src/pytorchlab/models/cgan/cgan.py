@@ -4,11 +4,9 @@ from lightning.pytorch import LightningModule
 from torch import nn
 
 from pytorchlab.lr_scheduler import KeepLR
-from pytorchlab.modules.gans.discriminator.linear import \
-    ConditionalLinearDiscriminator
+from pytorchlab.modules.gans.discriminator.linear import ConditionalLinearDiscriminator
 from pytorchlab.modules.gans.generator.linear import ConditionalLinearGenerator
-from pytorchlab.type_hint import (LRSchedulerCallable, ModuleCallable,
-                                  OptimizerCallable)
+from pytorchlab.type_hint import LRSchedulerCallable, ModuleCallable, OptimizerCallable
 
 
 class CGAN(LightningModule):
