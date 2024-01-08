@@ -1,4 +1,3 @@
-from jsonargparse import lazy_instance
 from torch import Tensor, nn
 
 from pytorchlab.type_hint import ModuleCallable
@@ -16,7 +15,7 @@ class ConvDiscriminator(nn.Module):
         ],
         dropout: float = 0.5,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        activation: nn.Module | None = None,
     ):
         """
         Discriminator with convolution layers.
@@ -28,6 +27,7 @@ class ConvDiscriminator(nn.Module):
             activation (nn.Module, optional): activation layer. Defaults to lazy_instance(nn.ReLU, inplace=True).
         """
         super().__init__()
+        activation = activation or nn.ReLU(inplace=True)
         hidden_layers = [(channel, 4, 2, 1)] + hidden_layers + [(1, 1, 1, 1)]
         layers: list[nn.Module] = []
         for i in range(1, len(hidden_layers)):
@@ -59,9 +59,7 @@ class NLayerDiscriminator(nn.Module):
         ndf: int = 64,
         depth: int = 3,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(
-            nn.LeakyReLU, negative_slope=0.2, inplace=True
-        ),
+        activation: nn.Module | None = None,
     ):
         """PatchGAN discriminator
 
@@ -73,7 +71,7 @@ class NLayerDiscriminator(nn.Module):
             activation (nn.Module, optional): module for activate layer. Defaults to nn.LeakyReLU(0.2, inplace=True).
         """
         super().__init__()
-
+        activation = activation or nn.LeakyReLU(negative_slope=0.2, inplace=True)
         layers: list[nn.Module] = [
             nn.Conv2d(channel, ndf, kernel_size=4, stride=2, padding=1),
             activation,
@@ -124,11 +122,10 @@ class PixelDiscriminator(nn.Module):
         channel: int,
         ndf: int = 64,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(
-            nn.LeakyReLU, negative_slope=0.2, inplace=True
-        ),
+        activation: nn.Module | None = None,
     ):
         super().__init__()
+        activation = activation or nn.LeakyReLU(negative_slope=0.2, inplace=True)
         self.model = nn.Sequential(
             nn.Conv2d(channel, ndf, kernel_size=1, stride=1, padding=0),
             activation,

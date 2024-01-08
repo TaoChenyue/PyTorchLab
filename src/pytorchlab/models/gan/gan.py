@@ -1,12 +1,9 @@
 import torch
-from jsonargparse import lazy_instance
 from lightning.pytorch import LightningModule
 from torch import nn
 
 from pytorchlab.lr_scheduler import KeepLR
-from pytorchlab.modules.gans.discriminator.linear import LinearDiscriminator
-from pytorchlab.modules.gans.generator.linear import LinearGenerator
-from pytorchlab.type_hint import LRSchedulerCallable, ModuleCallable, OptimizerCallable
+from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
 
 __all__ = ["GAN"]
 
@@ -14,20 +11,10 @@ __all__ = ["GAN"]
 class GAN(LightningModule):
     def __init__(
         self,
-        generator: nn.Module = lazy_instance(
-            LinearGenerator,
-            channel=1,
-            height=28,
-            width=28,
-            latent_dim=100,
-        ),
-        discriminator: nn.Module = lazy_instance(
-            LinearDiscriminator,
-            channel=1,
-            height=28,
-            width=28,
-        ),
-        criterion: ModuleCallable = nn.BCELoss,
+        latent_dim: int,
+        generator: nn.Module,
+        discriminator: nn.Module,
+        criterion: nn.Module,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
         lr_g: LRSchedulerCallable = KeepLR,
@@ -37,12 +24,10 @@ class GAN(LightningModule):
         # do not optimize model automatically
         self.automatic_optimization = False
         # init model
-        self.latent_dim = getattr(generator, "latent_dim", None)
-        if self.latent_dim is None:
-            raise NotImplementedError("latent_dim is not defined in generator")
+        self.latent_dim = latent_dim
         self.generator = generator
         self.discriminator = discriminator
-        self.criterion = criterion()
+        self.criterion = criterion
         self.optimizer_g = optimizer_g
         self.optimizer_d = optimizer_d
         self.lr_g = lr_g

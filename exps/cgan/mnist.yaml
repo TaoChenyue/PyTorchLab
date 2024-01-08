@@ -25,8 +25,8 @@ trainer:
     class_path: pytorchlab.callbacks.gan.ConditionalGANCallback
     init_args:
       latent_dim: 100
-      nums: 5
       num_classes: 10
+      nums: 5
       tag: null
       override: false
       nrow: 5
@@ -90,6 +90,8 @@ data:
 model:
   class_path: pytorchlab.models.cgan.CGAN
   init_args:
+    latent_dim: 100
+    num_classes: 10
     generator:
       class_path: pytorchlab.modules.gans.generator.linear.ConditionalLinearGenerator
       init_args:

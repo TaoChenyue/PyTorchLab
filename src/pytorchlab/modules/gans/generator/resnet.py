@@ -1,4 +1,3 @@
-from jsonargparse import lazy_instance
 from torch import nn
 
 from pytorchlab.type_hint import ModuleCallable
@@ -11,7 +10,7 @@ class ResNetBlock(nn.Module):
         dropout: float = 0.0,
         padding_cls: ModuleCallable = nn.ReflectionPad2d,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        activation: nn.Module | None = None,
     ):
         """residual block
 
@@ -24,6 +23,7 @@ class ResNetBlock(nn.Module):
             activation (nn.Module, optional): module for activate layer. Defaults to nn.ReLU(inplace=True).
         """
         super().__init__()
+        activation = activation or nn.ReLU(inplace=True)
         layers: list[nn.Module] = []
         for i in range(2):
             layers += [
@@ -57,9 +57,10 @@ class ResNetGenerator(nn.Module):
         dropout: float = 0.0,
         padding_cls: ModuleCallable = nn.ReflectionPad2d,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        activation: nn.Module | None = None,
     ):
         super().__init__()
+        activation = activation or nn.ReLU(inplace=True)
         layers: list[nn.Module] = []
         layers += [
             padding_cls(1),

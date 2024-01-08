@@ -1,26 +1,21 @@
 from typing import Any
 
 import torch
-from jsonargparse import lazy_instance
 from lightning.pytorch import LightningModule
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch import nn
 
 from pytorchlab.lr_scheduler.keeplr import KeepLR
-from pytorchlab.modules.gans.discriminator.conv import NLayerDiscriminator
-from pytorchlab.modules.gans.generator.unet import UNetGenerator
 from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
 
 
 class Pix2Pix(LightningModule):
     def __init__(
         self,
-        generator: nn.Module = lazy_instance(
-            UNetGenerator, in_channels=3, out_channels=3
-        ),
-        discriminator: nn.Module = lazy_instance(NLayerDiscriminator, channel=6),
-        criterion_gan: nn.Module = lazy_instance(nn.MSELoss),
-        criterion_image: nn.Module = lazy_instance(nn.L1Loss),
+        generator: nn.Module,
+        discriminator: nn.Module,
+        criterion_gan: nn.Module,
+        criterion_image: nn.Module,
         lambda_image_loss: float = 100,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,

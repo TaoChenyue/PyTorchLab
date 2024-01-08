@@ -99,6 +99,7 @@ data:
 model:
   class_path: pytorchlab.models.dcgan.DCGAN
   init_args:
+    latent_dim: 100
     generator:
       class_path: pytorchlab.modules.gans.generator.conv.ConvGenerator
       init_args:

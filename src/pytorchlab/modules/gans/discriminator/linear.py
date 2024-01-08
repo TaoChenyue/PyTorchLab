@@ -1,5 +1,4 @@
 import torch
-from jsonargparse import lazy_instance
 from torch import nn
 
 
@@ -11,8 +10,8 @@ class LinearDiscriminator(nn.Module):
         width: int,
         hidden_layers: list[int] = [1024, 512, 256],
         dropout: float = 0.3,
-        activation: nn.Module = lazy_instance(nn.LeakyReLU, negative_slope=0.2),
-        out_activation: nn.Module = lazy_instance(nn.Sigmoid),
+        activation: nn.Module | None = None,
+        out_activation: nn.Module | None = None,
     ):
         """
         Discriminator with linear layers.
@@ -27,6 +26,8 @@ class LinearDiscriminator(nn.Module):
             out_activation (nn.Module, optional): activation layer used in the last layer. Defaults to lazy_instance(nn.Sigmoid).
         """
         super().__init__()
+        activation = activation or nn.LeakyReLU(negative_slope=0.2, inplace=True)
+        out_activation = out_activation or nn.Sigmoid()
         self.channel = channel
         self.height = height
         self.width = width
@@ -57,8 +58,8 @@ class ConditionalLinearDiscriminator(nn.Module):
         num_classes: int,
         hidden_layers: list[int] = [1024, 512, 256],
         dropout: float = 0.3,
-        activation: nn.Module = lazy_instance(nn.LeakyReLU, negative_slope=0.2),
-        out_activation: nn.Module = lazy_instance(nn.Sigmoid),
+        activation: nn.Module | None = None,
+        out_activation: nn.Module | None = None,
     ):
         """
         Conditional discriminator with linear layers.
@@ -74,6 +75,8 @@ class ConditionalLinearDiscriminator(nn.Module):
             out_activation (nn.Module, optional): activation layer used in the last layer. Defaults to lazy_instance(nn.Sigmoid).
         """
         super().__init__()
+        activation = activation or nn.LeakyReLU(negative_slope=0.2, inplace=True)
+        out_activation = out_activation or nn.Sigmoid()
         self.embedding = nn.Embedding(num_classes, num_classes)
         self.channel = channel
         self.height = height

@@ -89,6 +89,7 @@ data:
 model:
   class_path: pytorchlab.models.gan.GAN
   init_args:
+    latent_dim: 100
     generator:
       class_path: pytorchlab.modules.gans.generator.linear.LinearGenerator
       init_args:
@@ -128,6 +129,7 @@ model:
     criterion:
       class_path: torch.nn.BCELoss
       init_args:
+        weight: null
         size_average: null
         reduce: null
         reduction: mean

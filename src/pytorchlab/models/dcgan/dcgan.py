@@ -1,27 +1,18 @@
 import torch
-from jsonargparse import lazy_instance
 from lightning.pytorch import LightningModule
 from torch import nn
 
 from pytorchlab.lr_scheduler.keeplr import KeepLR
-from pytorchlab.modules.gans.discriminator.conv import ConvDiscriminator
-from pytorchlab.modules.gans.generator.conv import ConvGenerator
 from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
 
 
 class DCGAN(LightningModule):
     def __init__(
         self,
-        generator: nn.Module = lazy_instance(
-            ConvGenerator,
-            channel=1,
-            latent_dim=100,
-        ),
-        discriminator: nn.Module = lazy_instance(
-            ConvDiscriminator,
-            channel=1,
-        ),
-        criterion: nn.Module = lazy_instance(nn.MSELoss),
+        latent_dim: int,
+        generator: nn.Module,
+        discriminator: nn.Module,
+        criterion: nn.Module,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
         lr_g: LRSchedulerCallable = KeepLR,
@@ -31,9 +22,7 @@ class DCGAN(LightningModule):
         # do not optimize model automatically
         self.automatic_optimization = False
         # init mode
-        self.latent_dim = getattr(generator, "latent_dim", None)
-        if self.latent_dim is None:
-            raise NotImplementedError("Please set latent_dim in generator")
+        self.latent_dim = latent_dim
         self.generator = generator
         self.discriminator = discriminator
         self.criterion = criterion

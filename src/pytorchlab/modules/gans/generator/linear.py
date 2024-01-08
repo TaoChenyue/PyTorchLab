@@ -1,5 +1,4 @@
 import torch
-from jsonargparse import lazy_instance
 from torch import nn
 
 
@@ -11,8 +10,8 @@ class LinearGenerator(nn.Module):
         width: int,
         latent_dim: int,
         hidden_layers: list[int] = [256, 512, 1024],
-        activation: nn.Module = lazy_instance(nn.LeakyReLU, negative_slope=0.2),
-        out_activation: nn.Module = lazy_instance(nn.Tanh),
+        activation: nn.Module | None = None,
+        out_activation: nn.Module | None = None,
     ):
         """
         Generator with linear layers
@@ -32,6 +31,9 @@ class LinearGenerator(nn.Module):
         self.width = width
         self.latent_dim = latent_dim
         hidden_layers = [latent_dim] + hidden_layers + [channel * height * width]
+        activation = activation or nn.LeakyReLU(negative_slope=0.2, inplace=True)
+        out_activation = out_activation or nn.Tanh()
+
         layers: list[nn.Module] = []
         for i in range(1, len(hidden_layers)):
             layers.append(nn.Linear(hidden_layers[i - 1], hidden_layers[i]))
@@ -56,8 +58,8 @@ class ConditionalLinearGenerator(nn.Module):
         num_classes: int,
         latent_dim: int,
         hidden_layers: list[int] = [256, 512, 1024],
-        activation: nn.Module = lazy_instance(nn.LeakyReLU, negative_slope=0.2),
-        out_activation: nn.Module = lazy_instance(nn.Tanh),
+        activation: nn.Module | None = None,
+        out_activation: nn.Module | None = None,
     ):
         """
         Conditional generator with linear layers.
@@ -79,6 +81,9 @@ class ConditionalLinearGenerator(nn.Module):
         self.width = width
         self.latent_dim = latent_dim
         self.num_classes = num_classes
+        activation = activation or nn.LeakyReLU(negative_slope=0.2)
+        out_activation = out_activation or nn.Tanh()
+
         hidden_layers = (
             [latent_dim + num_classes] + hidden_layers + [channel * height * width]
         )

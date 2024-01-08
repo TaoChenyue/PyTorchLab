@@ -1,4 +1,3 @@
-from jsonargparse import lazy_instance
 from torch import Tensor, nn
 
 from pytorchlab.type_hint import ModuleCallable
@@ -16,8 +15,8 @@ class ConvGenerator(nn.Module):
             (16, 4, 2, 1),
         ],
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
-        out_activation: nn.Module = lazy_instance(nn.Tanh),
+        activation: nn.Module | None = None,
+        out_activation: nn.Module | None = None,
     ):
         """
         Generator with convolution layers.
@@ -32,6 +31,8 @@ class ConvGenerator(nn.Module):
         """
         super().__init__()
         self.latent_dim = latent_dim
+        activation = activation or nn.ReLU(inplace=True)
+        out_activation = out_activation or nn.Tanh()
         hidden_layers = [(latent_dim, 4, 1, 0)] + hidden_layers + [(channel, 1, 1, 1)]
         layers: list[nn.Module] = []
         for i in range(1, len(hidden_layers)):

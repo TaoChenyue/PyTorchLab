@@ -10,7 +10,7 @@ trainer:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
       save_dir: lightning_logs
-      name: lenet5_mnist
+      name: lenet5_fashionmnist
       version: null
       log_graph: false
       default_hp_metric: true
@@ -63,7 +63,7 @@ trainer:
   default_root_dir: null
 ckpt_path: null
 data:
-  class_path: pytorchlab.datamodules.vision.mnist.MNISTDataModule
+  class_path: pytorchlab.datamodules.vision.mnist.FashionMNISTDataModule
   init_args:
     train_root: dataset
     test_root: dataset
@@ -88,4 +88,4 @@ model:
     height: 28
     width: 28
     num_classes: 10
-    criterion: torch.nn.CrossEntropyLoss
+    criterion: null

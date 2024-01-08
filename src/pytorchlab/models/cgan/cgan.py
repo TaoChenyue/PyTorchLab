@@ -1,32 +1,18 @@
 import torch
-from jsonargparse import lazy_instance
 from lightning.pytorch import LightningModule
 from torch import nn
 
 from pytorchlab.lr_scheduler import KeepLR
-from pytorchlab.modules.gans.discriminator.linear import ConditionalLinearDiscriminator
-from pytorchlab.modules.gans.generator.linear import ConditionalLinearGenerator
 from pytorchlab.type_hint import LRSchedulerCallable, ModuleCallable, OptimizerCallable
 
 
 class CGAN(LightningModule):
     def __init__(
         self,
-        generator: nn.Module = lazy_instance(
-            ConditionalLinearGenerator,
-            channel=1,
-            height=28,
-            width=28,
-            num_classes=10,
-            latent_dim=100,
-        ),
-        discriminator: nn.Module = lazy_instance(
-            ConditionalLinearDiscriminator,
-            channel=1,
-            height=28,
-            width=28,
-            num_classes=10,
-        ),
+        latent_dim: int,
+        num_classes: int,
+        generator: nn.Module,
+        discriminator: nn.Module,
         criterion: ModuleCallable = nn.BCELoss,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
@@ -37,19 +23,8 @@ class CGAN(LightningModule):
         # do not optimize moddiscriminator
         self.automatic_optimization = False
         # init model
-        self.latent_dim = getattr(generator, "latent_dim", None)
-        if self.latent_dim is None:
-            raise NotImplementedError("latent_dim is not defined in generator")
-        ncs_g = getattr(generator, "num_classes", None)
-        if ncs_g is None:
-            raise NotImplementedError("num_classes is not defined in generator")
-        ncs_d = getattr(discriminator, "num_classes", None)
-        if ncs_d is None:
-            raise NotImplementedError("num_classes is not defined in discriminator")
-        if ncs_g != ncs_d:
-            raise ValueError("num_classes in generator and discriminator must be equal")
-
-        self.num_classes = ncs_g
+        self.latent_dim = latent_dim
+        self.num_classes = num_classes
 
         self.generator = generator
         self.discriminator = discriminator

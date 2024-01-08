@@ -4,8 +4,6 @@ import torch
 from lightning.pytorch import LightningModule
 from torch import nn
 
-from pytorchlab.type_hint import ModuleCallable
-
 __all__ = ["LeNet5"]
 
 
@@ -16,7 +14,7 @@ class LeNet5(LightningModule):
         height: int = 28,
         width: int = 28,
         num_classes: int = 10,
-        criterion: ModuleCallable = nn.CrossEntropyLoss,
+        criterion: nn.Module | None = None,
     ):
         super().__init__()
         # //////////////////////////////////////////////////
@@ -39,7 +37,7 @@ class LeNet5(LightningModule):
         )
         # //////////////////////////////////////////////////
         # Loss
-        self.criterion = criterion()
+        self.criterion = criterion or nn.CrossEntropyLoss()
 
     def forward(self, x):
         return self.fc(self.conv(x).view(x.shape[0], -1))

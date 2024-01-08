@@ -25,9 +25,15 @@ trainer:
   - class_path: pytorchlab.callbacks.image.IQAMetricsCallback
   - class_path: pytorchlab.callbacks.image.ShowImageCallback
     init_args:
+      name: null
       num_images: 4
+      batch: 0
       nrow: 2
       padding: 2
+      normalize: false
+      value_range: null
+      scale_each: false
+      pad_value: 0.0
   fast_dev_run: false
   max_epochs: 400
   min_epochs: null
@@ -86,12 +92,9 @@ data:
       class_path: torchvision.transforms.Compose
       init_args:
         transforms:
-        # - class_path: torchvision.transforms.CenterCrop
-        #   init_args:
-        #     size: 256
         - class_path: torchvision.transforms.Resize
           init_args:
-            size: 
+            size:
             - 256
             - 256
             # interpolation: BILINEAR
@@ -113,7 +116,16 @@ model:
         out_channels: 3
         depth: 8
         ngf: 64
-        norm_cls: torch.nn.BatchNorm2d
+        dropout: 0.5
+        norm_cls:
+          class_path: torch.nn.BatchNorm2d
+          init_args:
+            eps: 1.0e-05
+            momentum: 0.1
+            affine: true
+            track_running_stats: true
+            device: null
+            dtype: null
         down_relu:
           class_path: torch.nn.LeakyReLU
           init_args:
@@ -123,14 +135,21 @@ model:
           class_path: torch.nn.ReLU
           init_args:
             inplace: true
-        dropout: 0.5
     discriminator:
       class_path: pytorchlab.modules.gans.discriminator.conv.NLayerDiscriminator
       init_args:
         channel: 6
         ndf: 64
         depth: 3
-        norm_cls: torch.nn.BatchNorm2d
+        norm_cls:
+          class_path: torch.nn.BatchNorm2d
+          init_args:
+            eps: 1.0e-05
+            momentum: 0.1
+            affine: true
+            track_running_stats: true
+            device: null
+            dtype: null
         activation:
           class_path: torch.nn.LeakyReLU
           init_args:
@@ -179,5 +198,13 @@ model:
         capturable: false
         differentiable: false
         fused: null
-    lr_g: pytorchlab.lr_scheduler.KeepLR
-    lr_d: pytorchlab.lr_scheduler.KeepLR
+    lr_g:
+      class_path: pytorchlab.lr_scheduler.KeepLR
+      init_args:
+        last_epoch: -1
+        verbose: false
+    lr_d:
+      class_path: pytorchlab.lr_scheduler.KeepLR
+      init_args:
+        last_epoch: -1
+        verbose: false

@@ -1,5 +1,4 @@
 import torch
-from jsonargparse import lazy_instance
 from torch import nn
 
 from pytorchlab.type_hint import ModuleCallable
@@ -13,10 +12,8 @@ class UNetSkipConnectionBlock(nn.Module):
         dropout: float = 0.0,
         submodule: nn.Module | None = None,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        down_relu: nn.Module = lazy_instance(
-            nn.LeakyReLU, negative_slope=0.2, inplace=True
-        ),
-        up_relu: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        down_relu: nn.Module | None = None,
+        up_relu: nn.Module | None = None,
     ):
         super().__init__()
         down_conv = nn.Conv2d(
@@ -27,6 +24,8 @@ class UNetSkipConnectionBlock(nn.Module):
             padding=1,
         )
         down_norm: nn.Module = norm_cls(channel)
+        down_relu = down_relu or nn.LeakyReLU(negative_slope=0.2, inplace=True)
+
         up_conv = nn.ConvTranspose2d(
             channel * (1 if submodule is None else 2),
             last_channel,
@@ -35,6 +34,8 @@ class UNetSkipConnectionBlock(nn.Module):
             padding=1,
         )
         up_norm: nn.Module = norm_cls(last_channel)
+        up_relu = up_relu or nn.ReLU(inplace=True)
+
         layers: list[nn.Module] = [down_relu, down_conv, down_norm]
         if submodule is not None:
             layers.append(submodule)
@@ -54,14 +55,14 @@ class UNetGenerator(nn.Module):
         out_channels: int,
         depth: int = 8,
         ngf: int = 64,
-        norm_cls: ModuleCallable = nn.BatchNorm2d,
-        down_relu: nn.Module = lazy_instance(
-            nn.LeakyReLU, negative_slope=0.2, inplace=True
-        ),
-        up_relu: nn.Module = lazy_instance(nn.ReLU, inplace=True),
         dropout: float = 0.5,
+        norm_cls: ModuleCallable = nn.BatchNorm2d,
+        down_relu: nn.Module | None = None,
+        up_relu: nn.Module | None = None,
     ):
         super().__init__()
+        down_relu = down_relu or nn.LeakyReLU(negative_slope=0.2, inplace=True)
+        up_relu = up_relu or nn.ReLU(inplace=True)
         unet_block = UNetSkipConnectionBlock(
             last_channel=ngf * 8,
             channel=ngf * 8,
