@@ -36,16 +36,16 @@ class SobelLoss(nn.Module):
         self.conv_hx.weight = torch.nn.Parameter(sobel_x, requires_grad=False)
         self.conv_hy.weight = torch.nn.Parameter(sobel_y, requires_grad=False)
 
-    def forward(self, X, Y):
-        X = torch.mean(X, dim=1, keepdim=True)
-        X_hx = self.conv_hx(X)
-        X_hy = self.conv_hy(X)
-        G_X = torch.abs(X_hx) + torch.abs(X_hy)
-        Y = torch.mean(Y, dim=1, keepdim=True)
-        Y_hx = self.conv_hx(Y)
-        Y_hy = self.conv_hy(Y)
-        G_Y = torch.abs(Y_hx) + torch.abs(Y_hy)
-        return F.mse_loss(G_X, G_Y, reduction="mean")
+    def get_edge(self, x):
+        x = torch.mean(x, dim=1, keepdim=True)
+        hx = self.conv_hx(x)
+        hy = self.conv_hy(x)
+        return torch.abs(hx) + torch.abs(hy)
+
+    def forward(self, x, y):
+        edge_x = self.get_edge(x)
+        edge_y = self.get_edge(y)
+        return F.mse_loss(edge_x, edge_y, reduction="mean")
 
 
 class LaplacianLoss(nn.Module):
@@ -56,12 +56,14 @@ class LaplacianLoss(nn.Module):
         self.conv_la = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
         self.conv_la.weight = torch.nn.Parameter(Laplacian, requires_grad=False)
 
-    def forward(self, X, Y):
-        X = torch.mean(X, dim=1, keepdim=True)
-        X_la = self.conv_la(X)
-        Y = torch.mean(Y, dim=1, keepdim=True)
-        Y_la = self.conv_la(Y)
-        return F.mse_loss(X_la, Y_la, reduction="mean")
+    def get_edge(self, x):
+        x = torch.mean(x, dim=1, keepdim=True)
+        return self.conv_la(x)
+
+    def forward(self, x, y):
+        edge_x = self.get_edge(x)
+        edge_y = self.get_edge(y)
+        return F.mse_loss(edge_x, edge_y, reduction="mean")
 
 
 class TVLoss(nn.Module):
