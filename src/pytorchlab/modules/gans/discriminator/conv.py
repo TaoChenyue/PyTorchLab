@@ -41,7 +41,7 @@ class ConvDiscriminator(nn.Module):
                 )
             )
 
-            if i != len(hidden_layers) - 1:
+            if i < len(hidden_layers) - 1:
                 layers.append(norm_cls(hidden_layers[i][0]))
                 layers.append(activation)
                 if dropout > 0:

@@ -11,7 +11,7 @@ class UNetSkipConnectionBlock(nn.Module):
         channel: int,
         dropout: float = 0.0,
         submodule: nn.Module | None = None,
-        norm_cls: ModuleCallable = nn.BatchNorm2d,
+        norm_cls: ModuleCallable | None = nn.BatchNorm2d,
         down_relu: nn.Module | None = None,
         up_relu: nn.Module | None = None,
     ):
@@ -23,7 +23,7 @@ class UNetSkipConnectionBlock(nn.Module):
             stride=2,
             padding=1,
         )
-        down_norm: nn.Module = norm_cls(channel)
+        down_norm: nn.Module = norm_cls(channel) if norm_cls is not None else nn.Identity()
         down_relu = down_relu or nn.LeakyReLU(negative_slope=0.2, inplace=True)
 
         up_conv = nn.ConvTranspose2d(
@@ -33,7 +33,7 @@ class UNetSkipConnectionBlock(nn.Module):
             stride=2,
             padding=1,
         )
-        up_norm: nn.Module = norm_cls(last_channel)
+        up_norm: nn.Module = norm_cls(last_channel) if norm_cls is not None else nn.Identity()
         up_relu = up_relu or nn.ReLU(inplace=True)
 
         layers: list[nn.Module] = [down_relu, down_conv, down_norm]
@@ -67,7 +67,7 @@ class UNetGenerator(nn.Module):
             last_channel=ngf * 8,
             channel=ngf * 8,
             submodule=None,
-            norm_cls=norm_cls,
+            norm_cls=None,
             down_relu=down_relu,
             up_relu=up_relu,
         )
