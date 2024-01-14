@@ -57,6 +57,7 @@ def make_gif(
         font = ImageFont.load_default(size=16)
         draw.text((0, 0), f"{x.stem}", font=font, fill=(0, 0, 0))
         image_list.append(result)
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     image_list[0].save(
         save_path,
         format="GIF",

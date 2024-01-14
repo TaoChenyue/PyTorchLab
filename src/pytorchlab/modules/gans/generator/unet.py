@@ -23,7 +23,9 @@ class UNetSkipConnectionBlock(nn.Module):
             stride=2,
             padding=1,
         )
-        down_norm: nn.Module = norm_cls(channel) if norm_cls is not None else nn.Identity()
+        down_norm: nn.Module = (
+            norm_cls(channel) if norm_cls is not None else nn.Identity()
+        )
         down_relu = down_relu or nn.LeakyReLU(negative_slope=0.2, inplace=True)
 
         up_conv = nn.ConvTranspose2d(
@@ -33,7 +35,9 @@ class UNetSkipConnectionBlock(nn.Module):
             stride=2,
             padding=1,
         )
-        up_norm: nn.Module = norm_cls(last_channel) if norm_cls is not None else nn.Identity()
+        up_norm: nn.Module = (
+            norm_cls(last_channel) if norm_cls is not None else nn.Identity()
+        )
         up_relu = up_relu or nn.ReLU(inplace=True)
 
         layers: list[nn.Module] = [down_relu, down_conv, down_norm]
