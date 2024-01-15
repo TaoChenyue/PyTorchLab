@@ -107,11 +107,11 @@ class ShowImageCallback(Callback):
             return
         if batch_idx == self.batch:
             x, y = batch
-            x = x[: self.num_images + 1]
-            y = y[: self.num_images + 1]
+            x = x[: self.num_images]
+            y = y[: self.num_images]
             out_name = f"epoch_{pl_module.current_epoch}.png"
             images = make_grid(
-                torch.cat((x, y, outputs[: self.num_images + 1]), dim=-1), **self.kwargs
+                torch.cat((x, y, outputs[: self.num_images]), dim=-1), **self.kwargs
             )
             save_image(
                 images,
