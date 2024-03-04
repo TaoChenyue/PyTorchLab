@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from pytorchlab.type_hint import ModuleCallable
+from jsonargparse import lazy_instance
 
 
 class LinearGenerator(nn.Module):
@@ -11,8 +11,8 @@ class LinearGenerator(nn.Module):
         width: int,
         latent_dim: int,
         hidden_layers: list[int] = [256, 512, 1024],
-        activation: ModuleCallable = nn.ReLU,
-        out_activation: ModuleCallable = nn.Tanh,
+        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        out_activation: nn.Module = lazy_instance(nn.Tanh),
     ):
         super().__init__()
         self.channel = channel
@@ -25,9 +25,9 @@ class LinearGenerator(nn.Module):
         for i in range(1, len(hidden_layers)):
             layers.append(nn.Linear(hidden_layers[i - 1], hidden_layers[i]))
             if i == len(hidden_layers) - 1:
-                layers.append(out_activation())
+                layers.append(out_activation)
             else:
-                layers.append(activation())
+                layers.append(activation)
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -43,8 +43,8 @@ class LinearDiscriminator(nn.Module):
         width: int,
         hidden_layers: list[int] = [1024, 512, 256],
         dropout: float = 0.3,
-        activation: ModuleCallable = nn.ReLU,
-        out_activation: ModuleCallable = nn.Sigmoid,
+        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        out_activation: nn.Module = lazy_instance(nn.Sigmoid),
     ):
         super().__init__()
         self.channel = channel
@@ -55,9 +55,9 @@ class LinearDiscriminator(nn.Module):
         for i in range(1, len(hidden_layers)):
             layers.append(nn.Linear(hidden_layers[i - 1], hidden_layers[i]))
             if i == len(hidden_layers) - 1:
-                layers.append(out_activation())
+                layers.append(out_activation)
             else:
-                layers.append(activation())
+                layers.append(activation)
                 if dropout > 0:
                     layers.append(nn.Dropout(dropout))
         self.model = nn.Sequential(*layers)
@@ -78,8 +78,8 @@ class ConditionalLinearGenerator(nn.Module):
         num_classes: int,
         latent_dim: int,
         hidden_layers: list[int] = [256, 512, 1024],
-        activation: ModuleCallable = nn.ReLU,
-        out_activation: ModuleCallable = nn.Tanh,
+        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        out_activation: nn.Module = lazy_instance(nn.Tanh),
     ):
         super().__init__()
         self.embedding = nn.Embedding(num_classes, num_classes)
@@ -96,9 +96,9 @@ class ConditionalLinearGenerator(nn.Module):
         for i in range(1, len(hidden_layers)):
             layers.append(nn.Linear(hidden_layers[i - 1], hidden_layers[i]))
             if i == len(hidden_layers) - 1:
-                layers.append(out_activation())
+                layers.append(out_activation)
             else:
-                layers.append(activation())
+                layers.append(activation)
         self.model = nn.Sequential(*layers)
 
     def forward(self, latent_code, label):
@@ -120,8 +120,8 @@ class ConditionalLinearDiscriminator(nn.Module):
         num_classes: int,
         hidden_layers: list[int] = [1024, 512, 256],
         dropout: float = 0.3,
-        activation: ModuleCallable = nn.ReLU,
-        out_activation: ModuleCallable = nn.Sigmoid,
+        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        out_activation: nn.Module = lazy_instance(nn.Sigmoid),
     ):
         super().__init__()
         self.embedding = nn.Embedding(num_classes, num_classes)
@@ -134,9 +134,9 @@ class ConditionalLinearDiscriminator(nn.Module):
         for i in range(1, len(hidden_layers)):
             layers.append(nn.Linear(hidden_layers[i - 1], hidden_layers[i]))
             if i == len(hidden_layers) - 1:
-                layers.append(out_activation())
+                layers.append(out_activation)
             else:
-                layers.append(activation())
+                layers.append(activation)
                 if dropout > 0:
                     layers.append(nn.Dropout(dropout))
         self.model = nn.Sequential(*layers)

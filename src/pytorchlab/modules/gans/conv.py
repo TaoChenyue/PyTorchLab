@@ -1,6 +1,7 @@
 from torch import Tensor, nn
 
 from pytorchlab.type_hint import ModuleCallable
+from jsonargparse import lazy_instance
 
 
 class ConvGenerator(nn.Module):
@@ -15,8 +16,8 @@ class ConvGenerator(nn.Module):
             (16, 4, 2, 1),
         ],
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: ModuleCallable = nn.ReLU,
-        out_activation: ModuleCallable = nn.Tanh,
+        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        out_activation: nn.Module = lazy_instance(nn.Tanh),
     ):
         super().__init__()
         self.latent_dim = latent_dim
@@ -34,10 +35,10 @@ class ConvGenerator(nn.Module):
             )
 
             if i == len(hidden_layers) - 1:
-                layers.append(out_activation())
+                layers.append(out_activation)
             else:
                 layers.append(norm_cls(hidden_layers[i][0]))
-                layers.append(activation())
+                layers.append(activation)
         self.model = nn.Sequential(*layers)
 
     def forward(self, z: Tensor) -> Tensor:
@@ -57,7 +58,7 @@ class ConvDiscriminator(nn.Module):
         ],
         dropout: float = 0.5,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: ModuleCallable = nn.ReLU,
+        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
     ):
         super().__init__()
         hidden_layers = [(channel, 4, 2, 1)] + hidden_layers + [(1, 1, 1, 1)]
@@ -75,7 +76,7 @@ class ConvDiscriminator(nn.Module):
 
             if i < len(hidden_layers) - 1:
                 layers.append(norm_cls(hidden_layers[i][0]))
-                layers.append(activation())
+                layers.append(activation)
                 if dropout > 0:
                     layers.append(nn.Dropout(dropout))
         self.model = nn.Sequential(*layers)
@@ -91,12 +92,12 @@ class NLayerDiscriminator(nn.Module):
         ndf: int = 64,
         depth: int = 3,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: ModuleCallable = nn.ReLU,
+        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
     ):
         super().__init__()
         layers: list[nn.Module] = [
             nn.Conv2d(channel, ndf, kernel_size=4, stride=2, padding=1),
-            activation(),
+            activation,
         ]
         nf_mult = 1
         nf_mult_prev = 1
@@ -112,7 +113,7 @@ class NLayerDiscriminator(nn.Module):
                     padding=1,
                 ),
                 norm_cls(ndf * nf_mult),
-                activation(),
+                activation,
             ]
 
         nf_mult_prev = nf_mult
@@ -126,7 +127,7 @@ class NLayerDiscriminator(nn.Module):
                 padding=1,
             ),
             norm_cls(ndf * nf_mult),
-            activation(),
+            activation,
         ]
 
         layers += [
@@ -144,15 +145,15 @@ class PixelDiscriminator(nn.Module):
         channel: int,
         ndf: int = 64,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: ModuleCallable = nn.ReLU,
+        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
     ):
         super().__init__()
         self.model = nn.Sequential(
             nn.Conv2d(channel, ndf, kernel_size=1, stride=1, padding=0),
-            activation(),
+            activation,
             nn.Conv2d(ndf, ndf * 2, kernel_size=1, stride=1, padding=0),
             norm_cls(ndf * 2),
-            activation(),
+            activation,
             nn.Conv2d(ndf * 2, 1, kernel_size=1, stride=1, padding=0),
         )
 

@@ -13,3 +13,6 @@
 <p align="center"> Realize some AI code with PyTorch and Lightning.
     <br> 
 </p>
+
+## 📦 Install
+check supported version of [pytorch](https://pytorch.org/get-started/previous-versions/) and [lightning](https://lightning.ai/docs/pytorch/stable/versioning.html#pytorch-support)

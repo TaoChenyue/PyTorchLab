@@ -2,18 +2,18 @@ import torch
 from torch import nn
 
 from pytorchlab.type_hint import ModuleCallable
-
+from jsonargparse import lazy_instance
 
 class UNetSkipConnectionBlock(nn.Module):
     def __init__(
         self,
         last_channel: int,
         channel: int,
+        down_relu: nn.Module,
+        up_relu:  nn.Module,
         dropout: float = 0.0,
         submodule: nn.Module | None = None,
         norm_cls: ModuleCallable | None = nn.BatchNorm2d,
-        down_relu: ModuleCallable = nn.ReLU,
-        up_relu:  ModuleCallable = nn.ReLU,
     ):
         super().__init__()
         down_conv = nn.Conv2d(
@@ -38,10 +38,10 @@ class UNetSkipConnectionBlock(nn.Module):
             norm_cls(last_channel) if norm_cls is not None else nn.Identity()
         )
 
-        layers: list[nn.Module] = [down_relu(), down_conv, down_norm]
+        layers: list[nn.Module] = [down_relu, down_conv, down_norm]
         if submodule is not None:
             layers.append(submodule)
-        layers += [up_relu(), up_conv, up_norm]
+        layers += [up_relu, up_conv, up_norm]
         if dropout != 0:
             layers += [nn.Dropout(dropout)]
         self.model = nn.Sequential(*layers)
@@ -59,8 +59,8 @@ class UNetGenerator(nn.Module):
         ngf: int = 64,
         dropout: float = 0.5,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        down_relu: ModuleCallable = nn.ReLU,
-        up_relu:  ModuleCallable = nn.ReLU,
+        down_relu: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        up_relu:  nn.Module = lazy_instance(nn.ReLU,inplace=True),
     ):
         super().__init__()
 
@@ -94,7 +94,7 @@ class UNetGenerator(nn.Module):
         self.model = nn.Sequential(
             nn.Conv2d(in_channels, ngf, 4, 2, 1),
             unet_block,
-            up_relu(),
+            up_relu,
             nn.ConvTranspose2d(ngf * 2, out_channels, 4, 2, 1),
             nn.Tanh(),
         )

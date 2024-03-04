@@ -4,12 +4,14 @@ version = "0.0.1"
 description = "Realize code in AI field with PyTorch and Lightning."
 authors = [{ name = "TaoChenyue", email = "chenyue.Tao@qq.com" }]
 dependencies = [
-    "torch>=2.0.1",
-    "lightning[extra]>=2.1.2",
+    "lightning[extra]==2.1.*",
+    "torch>=1.12,<=2.1",
+    "torchvision>=0.13,<=0.16",
+    "torchaudio>=0.12,<=2.1.2",
+    "torchmetrics>=0.7.0",
     "tensorboard>=2.15.1",
-    "torchmetrics>=1.2.0",
 ]
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<=3.11"
 readme = "README.md"
 license = { text = "GPLv3" }
 # select from https://pypi.org/classifiers/
@@ -31,22 +33,10 @@ Repository = "https://github.com/TaoChenyue/PyTorchLab"
 # Changelog = ""
 
 [project.optional-dependencies]
-vision = [
-    "torchvision>=0.16.1",
-    "opencv-python>=4.8.1.78",
-    "opencv-python-headless>=4.8.1.78",
-]
-audio = ["torchaudio>=2.1.1"]
-text = ["torchtext>=0.16.1"]
-docs = ["mkdocstrings-python>=1.7.5"]
-test = ["pytest>=7.4.3"]
-deploy = [
-    "onnx>=1.15.0",
-    "onnxruntime-gpu>=1.16.3",
-]
-tools = [
-    "grad-cam>=1.5.0",
-]
+vision = ["opencv-python>=4.8.1.78", "opencv-python-headless>=4.8.1.78"]
+audio = []
+deploy = ["onnx>=1.15.0", "onnxruntime-gpu>=1.16.3"]
+tools = ["grad-cam>=1.5.0"]
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"

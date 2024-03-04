@@ -1,7 +1,7 @@
 from torch import nn
 
 from pytorchlab.type_hint import ModuleCallable
-
+from jsonargparse import lazy_instance
 
 class ResidualBlock(nn.Module):
     def __init__(
@@ -10,7 +10,7 @@ class ResidualBlock(nn.Module):
         dropout: float = 0.0,
         padding_cls: ModuleCallable = nn.ReflectionPad2d,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: ModuleCallable = nn.ReLU,
+        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
     ):
         super().__init__()
         layers: list[nn.Module] = []
@@ -25,7 +25,7 @@ class ResidualBlock(nn.Module):
                     padding=0,
                 ),
                 norm_cls(channel),
-                activation(),
+                activation,
                 nn.Dropout(dropout),
             ]
         self.model = nn.Sequential(*layers)
@@ -46,7 +46,7 @@ class ResidualGenerator(nn.Module):
         dropout: float = 0.0,
         padding_cls: ModuleCallable = nn.ReflectionPad2d,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: ModuleCallable = nn.ReLU,
+        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
     ):
         super().__init__()
         layers: list[nn.Module] = []
@@ -59,7 +59,7 @@ class ResidualGenerator(nn.Module):
                 stride=1,
             ),
             norm_cls(ngf),
-            activation(),
+            activation,
         ]
         for i in range(depth):
             mult = 2**i
@@ -73,7 +73,7 @@ class ResidualGenerator(nn.Module):
                     padding=0,
                 ),
                 norm_cls(ngf * mult * 2),
-                activation(),
+                activation,
             ]
         mult = 2**depth
         for i in range(num_blocks):
@@ -83,7 +83,7 @@ class ResidualGenerator(nn.Module):
                     dropout=dropout,
                     padding_cls=padding_cls,
                     norm_cls=norm_cls,
-                    activation=activation(),
+                    activation=activation,
                 )
             ]
         for i in range(depth):
@@ -97,7 +97,7 @@ class ResidualGenerator(nn.Module):
                     padding=1,
                 ),
                 norm_cls(ngf * mult // 2),
-                activation(),
+                activation,
             ]
         layers += [
             padding_cls(3),
