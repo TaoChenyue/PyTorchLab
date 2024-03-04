@@ -9,7 +9,7 @@ from pytorchlab.utils.split_dataset import split_dataset
 class BaseDataModule(LightningDataModule):
     def __init__(
         self,
-        train_dataset: Dataset | Iterable[Dataset] | None = None,
+        train_dataset: Dataset | None = None,
         test_dataset: Dataset | Iterable[Dataset] | None = None,
         split: int | float = 0.2,
         seed: int | None = 42,
@@ -64,10 +64,10 @@ class BaseDataModule(LightningDataModule):
 
     def _dataloader(
         self,
-        dataset: Dataset|Iterable[Dataset],
+        dataset: Dataset | Iterable[Dataset],
         shuffle: bool = False,
     ):
-        if isinstance(dataset,Dataset):
+        if isinstance(dataset, Dataset):
             return DataLoader(
                 dataset,
                 batch_size=self.batch_size,
@@ -77,7 +77,8 @@ class BaseDataModule(LightningDataModule):
                 pin_memory=self.pin_memory,
                 persistent_workers=True if self.num_workers > 0 else False,
             )
-        return [DataLoader(
+        return [
+            DataLoader(
                 x,
                 batch_size=self.batch_size,
                 shuffle=shuffle,
@@ -85,12 +86,14 @@ class BaseDataModule(LightningDataModule):
                 drop_last=self.drop_last,
                 pin_memory=self.pin_memory,
                 persistent_workers=True if self.num_workers > 0 else False,
-            ) for x in dataset]
+            )
+            for x in dataset
+        ]
 
-    def train_dataloader(self) -> DataLoader | Iterable[DataLoader]:
-        return self._dataloader(self.dataset_train,shuffle=self.shuffle)
+    def train_dataloader(self) -> DataLoader:
+        return self._dataloader(self.dataset_train, shuffle=self.shuffle)
 
-    def val_dataloader(self) -> DataLoader | Iterable[DataLoader]:
+    def val_dataloader(self) -> DataLoader:
         return self._dataloader(self.dataset_val)
 
     def test_dataloader(self) -> DataLoader | Iterable[DataLoader]:
