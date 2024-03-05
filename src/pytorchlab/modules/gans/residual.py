@@ -1,7 +1,8 @@
+from jsonargparse import lazy_instance
 from torch import nn
 
 from pytorchlab.type_hint import ModuleCallable
-from jsonargparse import lazy_instance
+
 
 class ResidualBlock(nn.Module):
     def __init__(
@@ -10,7 +11,7 @@ class ResidualBlock(nn.Module):
         dropout: float = 0.0,
         padding_cls: ModuleCallable = nn.ReflectionPad2d,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
     ):
         super().__init__()
         layers: list[nn.Module] = []
@@ -46,7 +47,7 @@ class ResidualGenerator(nn.Module):
         dropout: float = 0.0,
         padding_cls: ModuleCallable = nn.ReflectionPad2d,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
     ):
         super().__init__()
         layers: list[nn.Module] = []

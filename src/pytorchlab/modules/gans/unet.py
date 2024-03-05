@@ -1,8 +1,9 @@
 import torch
+from jsonargparse import lazy_instance
 from torch import nn
 
 from pytorchlab.type_hint import ModuleCallable
-from jsonargparse import lazy_instance
+
 
 class UNetSkipConnectionBlock(nn.Module):
     def __init__(
@@ -10,7 +11,7 @@ class UNetSkipConnectionBlock(nn.Module):
         last_channel: int,
         channel: int,
         down_relu: nn.Module,
-        up_relu:  nn.Module,
+        up_relu: nn.Module,
         dropout: float = 0.0,
         submodule: nn.Module | None = None,
         norm_cls: ModuleCallable | None = nn.BatchNorm2d,
@@ -59,8 +60,8 @@ class UNetGenerator(nn.Module):
         ngf: int = 64,
         dropout: float = 0.5,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        down_relu: nn.Module = lazy_instance(nn.ReLU,inplace=True),
-        up_relu:  nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        down_relu: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        up_relu: nn.Module = lazy_instance(nn.ReLU, inplace=True),
     ):
         super().__init__()
 

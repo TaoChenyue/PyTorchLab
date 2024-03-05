@@ -77,7 +77,7 @@ data:
         transform:
           class_path: torchvision.transforms.ToTensor
         target_transform: null
-        download: false
+        download: true
     test_dataset:
       class_path: torchvision.datasets.MNIST
       init_args:
@@ -86,8 +86,8 @@ data:
         transform:
           class_path: torchvision.transforms.ToTensor
         target_transform: null
-        download: false
-    split: 0.2
+        download: true
+    split: 0
     seed: 42
     num_workers: 4
     batch_size: 64

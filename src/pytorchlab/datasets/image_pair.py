@@ -13,7 +13,7 @@ class ImagePairDataset(Dataset):
         root: str,
         A_name: str,
         B_name: str,
-        shuffle:bool = False,
+        shuffle: bool = False,
         transform: Callable[[Iterable], Tensor] = None,
         target_transform: Callable[[Iterable], Tensor] = None,
     ) -> None:

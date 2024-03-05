@@ -174,3 +174,6 @@ cython_debug/
 # experiments
 test*.yaml
 test_*/
+
+# visualize
+/tmp

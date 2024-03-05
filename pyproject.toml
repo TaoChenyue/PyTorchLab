@@ -68,4 +68,3 @@ format = { composite = [
     "black {args}",
     "echo black done",
 ] }
-formats = "pdm run format src/ tests/ experiments/"

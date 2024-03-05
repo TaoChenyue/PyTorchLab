@@ -1,7 +1,7 @@
+from jsonargparse import lazy_instance
 from torch import Tensor, nn
 
 from pytorchlab.type_hint import ModuleCallable
-from jsonargparse import lazy_instance
 
 
 class ConvGenerator(nn.Module):
@@ -16,7 +16,7 @@ class ConvGenerator(nn.Module):
             (16, 4, 2, 1),
         ],
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
         out_activation: nn.Module = lazy_instance(nn.Tanh),
     ):
         super().__init__()
@@ -58,7 +58,7 @@ class ConvDiscriminator(nn.Module):
         ],
         dropout: float = 0.5,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
     ):
         super().__init__()
         hidden_layers = [(channel, 4, 2, 1)] + hidden_layers + [(1, 1, 1, 1)]
@@ -83,8 +83,8 @@ class ConvDiscriminator(nn.Module):
 
     def forward(self, z: Tensor) -> Tensor:
         return self.model(z)
-    
-    
+
+
 class NLayerDiscriminator(nn.Module):
     def __init__(
         self,
@@ -92,7 +92,7 @@ class NLayerDiscriminator(nn.Module):
         ndf: int = 64,
         depth: int = 3,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
     ):
         super().__init__()
         layers: list[nn.Module] = [
@@ -145,7 +145,7 @@ class PixelDiscriminator(nn.Module):
         channel: int,
         ndf: int = 64,
         norm_cls: ModuleCallable = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU,inplace=True),
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
     ):
         super().__init__()
         self.model = nn.Sequential(
