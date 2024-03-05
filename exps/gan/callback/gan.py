@@ -11,10 +11,12 @@ class GANCallback(Callback):
         self,
         latent_dim: int,
         nums: int = 9,
+        detail: bool = False,
         **kwargs,
     ):
         self.latent_dim = latent_dim
         self.nums = nums
+        self.detail = detail
         self.kwargs = kwargs
 
     def on_train_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
@@ -31,8 +33,10 @@ class GANCallback(Callback):
         save_path = Path(log_path) / tag / "train"
         save_path.mkdir(exist_ok=True, parents=True)
         out_name = f"epoch_{trainer.current_epoch}.png"
-        save_name = save_path / out_name
-        save_image(images, save_name)
+        if self.detail:
+            save_name = save_path / out_name
+            save_image(images, save_name)
+        save_image(images, save_path / "latest.png")
 
     def on_test_batch_end(
         self,
