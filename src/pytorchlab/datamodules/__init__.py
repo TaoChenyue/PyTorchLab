@@ -1,1 +1,1 @@
-from .base import BaseDataModule
+from .from_datasets import DataModule
