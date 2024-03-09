@@ -1,5 +1,4 @@
 import torch
-from torchvision.transforms import GaussianBlur
 
 
 class PepperSaltNoise(object):
@@ -11,12 +10,10 @@ class PepperSaltNoise(object):
         self.salt = salt
 
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
-        noise = torch.rand_like(x.index_select(dim=-3,index=torch.tensor([0])))
-        noise = noise.repeat_interleave(repeats=x.shape[-3],dim=-3)
+        noise = torch.rand_like(x.index_select(dim=-3, index=torch.tensor(0,device=x.device)))
+        noise = noise.repeat_interleave(repeats=x.shape[-3], dim=-3)
         salt = (
-            torch.max(x)
-            if self.salt is None
-            else torch.tensor(self.salt).to(x.device)
+            torch.max(x) if self.salt is None else torch.tensor(self.salt).to(x.device)
         )
         pepper = (
             torch.min(x)
@@ -26,3 +23,14 @@ class PepperSaltNoise(object):
         x[noise < self.p / 2] = pepper
         x[noise > 1 - self.p / 2] = salt
         return x
+
+
+class GaussianNoise(object):
+    def __init__(self, mean: float = 0.0, std: float = 1.0):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
+        noise = torch.randn_like(x.index_select(dim=-3, index=torch.tensor(0,device=x.device)))
+        noise = noise.repeat_interleave(repeats=x.shape[-3], dim=-3)
+        return x + self.mean + self.std * noise

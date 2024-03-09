@@ -24,3 +24,19 @@ def test_PepperSaltNoise(lena):
         nrow=3,
         padding=2,
     )
+
+
+def test_GaussianNoise(lena):
+    from pytorchlab.transforms.noise import GaussianNoise
+    from torchvision.utils import save_image
+    import torch
+
+    image_out = [
+        GaussianNoise(mean=0, std=0.1 * i)(lena.clone().detach()) for i in range(9)
+    ]
+    save_image(
+        torch.cat(image_out, dim=0),
+        f"output/lena_gaussian_noise.png",
+        nrow=3,
+        padding=2,
+    )
