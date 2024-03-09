@@ -1,5 +1,4 @@
 import torch
-from jsonargparse import lazy_instance
 from torch import nn
 
 from pytorchlab.type_hint import ModuleCallable
@@ -13,13 +12,13 @@ class Conv2dBlock(nn.Module):
         kernel_size: int = 4,
         stride: int = 2,
         padding: int = 1,
-        norm: ModuleCallable | None = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU),
+        norm: ModuleCallable | None = None,
+        activation: nn.Module | None = None,
     ):
         super().__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
         self.norm = nn.Identity() if norm is None else norm(out_channels)
-        self.activation = activation
+        self.activation = nn.ReLU(inplace=True) if activation is None else activation
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.conv(x)
@@ -36,8 +35,8 @@ class ConvTranspose2dBlock(nn.Module):
         kernel_size: int = 4,
         stride: int = 2,
         padding: int = 1,
-        norm: ModuleCallable | None = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU),
+        norm: ModuleCallable | None = None,
+        activation: nn.Module | None = None,
     ):
         super().__init__()
         self.deconv = nn.ConvTranspose2d(
@@ -48,7 +47,7 @@ class ConvTranspose2dBlock(nn.Module):
             padding=padding,
         )
         self.norm = nn.Identity() if norm is None else norm(out_channels)
-        self.activation = activation
+        self.activation = nn.ReLU(inplace=True) if activation is None else activation
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.deconv(x)
@@ -65,12 +64,17 @@ class AutoEncoder2dBlock(nn.Module):
         kernel_size: int = 4,
         stride: int = 2,
         padding: int = 1,
-        norm: ModuleCallable | None = nn.BatchNorm2d,
-        activation: nn.Module = lazy_instance(nn.ReLU),
-        out_activation: nn.Module = lazy_instance(nn.ReLU),
+        norm: ModuleCallable | None = None,
+        activation: nn.Module | None = None,
+        out_activation: nn.Module | None = None,
         sub_module: nn.Module | None = None,
     ) -> None:
         super().__init__()
+        activation = nn.ReLU(inplace=True) if activation is None else activation
+        out_activation = (
+            nn.ReLU(inplace=True) if out_activation is None else out_activation
+        )
+
         self.encoder = Conv2dBlock(
             in_channels=last_channel,
             out_channels=channel,

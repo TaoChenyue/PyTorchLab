@@ -1,7 +1,6 @@
-from typing import Sequence
+from typing import Mapping, Sequence
 
 import torch
-from jsonargparse import lazy_instance
 from lightning.pytorch import LightningModule
 from torch import Tensor, nn
 
@@ -20,12 +19,16 @@ class AutoEncoder2dModule(LightningModule):
         nf: int = 64,
         depth: int = 8,
         hold_depth: int = 3,
-        norm: ModuleCallable = None,
-        activation: nn.Module = lazy_instance(nn.ReLU),
-        out_activation: nn.Module = lazy_instance(nn.Tanh),
-        criterion: nn.Module = lazy_instance(nn.MSELoss),
+        norm: ModuleCallable | None = None,
+        activation: nn.Module | None = None,
+        out_activation: nn.Module | None = None,
+        criterion: nn.Module | None = None,
     ):
         super().__init__()
+        activation = nn.ReLU(inplace=True) if activation is None else activation
+        out_activation = nn.Tanh() if out_activation is None else out_activation
+        criterion = nn.MSELoss() if criterion is None else criterion
+
         self.model = AutoEncoder2d(
             in_channel=in_channel,
             out_channel=out_channel,
@@ -43,33 +46,30 @@ class AutoEncoder2dModule(LightningModule):
 
     def forward(self, x):
         return self.model(x)
-    
+
     def configure_optimizers(self):
         return torch.optim.Adam(self.model.parameters(), lr=1e-3)
-    
-    def training_step(self, batch:Sequence[Tensor], batch_idx:int)->Tensor:
-        x,y = batch[0:2]
+
+    def _step(self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0):
+        x, y = batch[0:2]
         pred = self(x)
         loss = self.criterion(pred, y)
-        self.log_dict(
-            {
-                "train_loss": loss
-            },
-            prog_bar=True,
-            sync_dist=True,
-        )
-        return loss
-    
-    def validation_step(self,batch: Sequence[Tensor],batch_idx:int,)->Tensor:
-        x,y = batch[0:2]
-        pred = self(x)
-        loss = self.criterion(pred, y)
-        self.log_dict(
-            {
-                "val_loss": loss
-            },
-        )
-        return loss
-    
-if __name__ == "__main__":
-    
+        return {"loss": loss, "output": pred}
+
+    def training_step(self, batch: Sequence[Tensor], batch_idx: int):
+        return self._step(batch, batch_idx)
+
+    def validation_step(
+        self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0
+    ):
+        return self._step(batch, batch_idx, dataloader_idx=dataloader_idx)
+
+    def test_step(
+        self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0
+    ):
+        return self._step(batch, batch_idx, dataloader_idx=dataloader_idx)
+
+    def predict_step(
+        self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0
+    ):
+        return self._step(batch, batch_idx, dataloader_idx=dataloader_idx)

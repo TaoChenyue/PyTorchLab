@@ -1,5 +1,3 @@
-import torch
-from jsonargparse import lazy_instance
 from torch import Tensor, nn
 
 from pytorchlab.models.convolution import AutoEncoder2dBlock
@@ -18,10 +16,13 @@ class AutoEncoder2d(nn.Module):
         depth: int = 8,
         hold_depth: int = 3,
         norm: ModuleCallable = None,
-        activation: nn.Module = lazy_instance(nn.ReLU),
-        out_activation: nn.Module = lazy_instance(nn.Tanh),
+        activation: nn.Module | None = None,
+        out_activation: nn.Module | None = None,
     ):
         super().__init__()
+        activation = activation or nn.ReLU(inplace=True)
+        out_activation = out_activation or nn.Tanh()
+
         df_num = 2**hold_depth
         aeblock = AutoEncoder2dBlock(
             last_channel=nf * df_num,
@@ -67,10 +68,3 @@ class AutoEncoder2d(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         return self.model(x)
-
-
-if __name__ == "__main__":
-    ae = AutoEncoder2d(3, 3)
-    t = torch.randn(1, 3, 256, 256)
-    t = ae(t)
-    print(t.shape)

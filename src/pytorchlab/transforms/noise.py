@@ -10,7 +10,10 @@ class PepperSaltNoise(object):
         self.salt = salt
 
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
-        noise = torch.rand_like(x.index_select(dim=-3, index=torch.tensor(0,device=x.device)))
+        x = x.clone().detach()
+        noise = torch.rand_like(
+            x.index_select(dim=-3, index=torch.tensor(0, device=x.device))
+        )
         noise = noise.repeat_interleave(repeats=x.shape[-3], dim=-3)
         salt = (
             torch.max(x) if self.salt is None else torch.tensor(self.salt).to(x.device)
@@ -31,6 +34,8 @@ class GaussianNoise(object):
         self.std = std
 
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
-        noise = torch.randn_like(x.index_select(dim=-3, index=torch.tensor(0,device=x.device)))
+        noise = torch.randn_like(
+            x.index_select(dim=-3, index=torch.tensor(0, device=x.device))
+        )
         noise = noise.repeat_interleave(repeats=x.shape[-3], dim=-3)
         return x + self.mean + self.std * noise

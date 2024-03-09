@@ -1,6 +1,7 @@
 def main(epochs: int = 100):
     import torch
     from lightning.pytorch import Trainer
+    from lightning.pytorch.loggers import TensorBoardLogger
     from torch import tensor
 
     from pytorchlab.callbacks.loss import LossCallback
@@ -9,7 +10,12 @@ def main(epochs: int = 100):
     from pytorchlab.modules._boring.math import LinearModule
 
     model = LinearModule(in_features=1, out_features=1)
-    trainer = Trainer(max_epochs=epochs, devices=1, callbacks=[LossCallback()])
+    trainer = Trainer(
+        max_epochs=epochs,
+        devices=1,
+        callbacks=[LossCallback()],
+        logger=[TensorBoardLogger("lightning_logs", "test_from_datasets")],
+    )
 
     fn = lambda x: 2.0 * x + 1.0
 
