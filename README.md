@@ -16,6 +16,11 @@
 
 ## 📦 Install
 check supported version of [pytorch](https://pytorch.org/get-started/previous-versions/) and [lightning](https://lightning.ai/docs/pytorch/stable/versioning.html#pytorch-support)
+```
+git clone https://github.com/TaoChenyue/PyTorchLab.git
+cd PyTorchLab
+pip install -e .
+...
 
 ## Datasets 
 [BaiduNetDisk(Code: mqvi)](https://pan.baidu.com/s/1GFrlHWzVxKI8HoCbWTUfGw?pwd=mqvi)
