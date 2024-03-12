@@ -25,19 +25,18 @@ class ImageCallback(Callback):
         self.on_epoch = on_epoch
         self.kwargs = kwargs
 
-    def _epoch_start(self):
+    def _epoch_start(self, trainer: Trainer, pl_module: LightningModule):
         self.batch_now = random.randint(*self.batch_range)
 
-    def _epoch_end(self):
+    def _epoch_end(self, trainer: Trainer, pl_module: LightningModule):
         self.batch_now = None
 
-    def _get_image(self, outputs: Tensor | Mapping[str, Any] | None):
-        if outputs is None:
+    def _get_images(
+        self, outputs: Tensor | Mapping[str, Any] | None
+    ) -> list[Tensor] | None:
+        if not isinstance(outputs, Mapping):
             return None
-        if isinstance(outputs, Tensor):
-            image = outputs
-        if isinstance(outputs, Mapping):
-            image = outputs.get("output", None)
+        image = outputs.get("outputs", {}).get("images", [])
         return image
 
     def _get_log_dir(self, pl_module: LightningModule):
@@ -45,6 +44,37 @@ class ImageCallback(Callback):
         if log_path is None:
             return None
         return Path(log_path)
+
+    def _get_save_dir(
+        self,
+        trainer: Trainer,
+        log_dir: Path,
+        mode: Literal["val", "test", "predict"],
+        batch_idx: int = 0,
+        dataloader_idx: int = 0,
+    ) -> Path:
+        if mode == "val":
+            save_dir = (
+                (
+                    log_dir
+                    / "val_images"
+                    / f"dataloader={dataloader_idx}"
+                    / f"epoch={trainer.current_epoch}"
+                )
+                if self.on_epoch
+                else (
+                    log_dir / "val_images" / f"dataloader={dataloader_idx}" / "_latest"
+                )
+            )
+
+        else:
+            save_dir = (
+                log_dir
+                / f"{mode}_images"
+                / f"dataloader={dataloader_idx}"
+                / f"batch={batch_idx}"
+            )
+        return save_dir
 
     def _batch_end(
         self,
@@ -58,40 +88,40 @@ class ImageCallback(Callback):
     ) -> None:
         if mode == "val" and batch_idx != self.batch_now:
             return
-        image = self._get_image(outputs)
-        if image is None:
+
+        images = self._get_images(outputs)
+        if images is None:
             return
+
         log_dir = self._get_log_dir(pl_module)
         if log_dir is None:
             return
-        image = image[self.image_slice]
-        if mode == "val":
-            save_dir = [log_dir / "val_images" / "_latest"]
-            if self.on_epoch:
-                save_dir = [log_dir / "val_images" / f"epoch={trainer.current_epoch}"]
-        else:
-            save_dir = [log_dir / f"{mode}_images" / f"batch={batch_idx}"]
+        save_dir = self._get_save_dir(trainer, log_dir, mode, batch_idx, dataloader_idx)
 
-        for save_dir in save_dir:
-            save_dir.mkdir(exist_ok=True, parents=True)
-
-            images = {
-                f"index={index}.png": batch[index][self.image_slice]
-                for index in self.batch_indexes
+        images_dict = {
+            f"input_{index}.png": batch[index][self.image_slice]
+            for index in self.batch_indexes
+        }
+        images_dict.update(
+            {
+                f"output_{index}.png": images[index][self.image_slice]
+                for index in range(len(images))
             }
-            images["output.png"] = image
-            for name, image in images.items():
-                save_image(make_grid(image, **self.kwargs), save_dir / name)
+        )
+
+        save_dir.mkdir(exist_ok=True, parents=True)
+        for name, image in images_dict.items():
+            save_image(make_grid(image, **self.kwargs), save_dir / name)
 
     def on_validation_epoch_start(
         self, trainer: Trainer, pl_module: LightningModule
     ) -> None:
-        return self._epoch_start()
+        return self._epoch_start(trainer, pl_module)
 
     def on_validation_epoch_end(
         self, trainer: Trainer, pl_module: LightningModule
     ) -> None:
-        return self._epoch_end()
+        return self._epoch_end(trainer, pl_module)
 
     def on_validation_batch_end(
         self,
@@ -113,10 +143,10 @@ class ImageCallback(Callback):
         )
 
     def on_test_epoch_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
-        return self._epoch_start()
+        return self._epoch_start(trainer, pl_module)
 
     def on_test_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
-        return self._epoch_end()
+        return self._epoch_end(trainer, pl_module)
 
     def on_test_batch_end(
         self,
@@ -140,12 +170,12 @@ class ImageCallback(Callback):
     def on_predict_epoch_start(
         self, trainer: Trainer, pl_module: LightningModule
     ) -> None:
-        return self._epoch_start()
+        return self._epoch_start(trainer, pl_module)
 
     def on_predict_epoch_end(
         self, trainer: Trainer, pl_module: LightningModule
     ) -> None:
-        return self._epoch_end()
+        return self._epoch_end(trainer, pl_module)
 
     def on_predict_batch_end(
         self,

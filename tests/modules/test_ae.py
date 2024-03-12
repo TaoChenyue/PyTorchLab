@@ -1,14 +1,33 @@
-def test_AutoEncoder2d():
-    main()
+from lightning.pytorch import Trainer
+from lightning.pytorch.loggers import TensorBoardLogger
+from torch.utils.data import Dataset
+from torchvision import transforms
+from torchvision.datasets import MNIST
+
+from pytorchlab.callbacks.image import ImageCallback
+from pytorchlab.callbacks.loss import LossCallback
+from pytorchlab.datamodules.from_datasets import DataModule
+from pytorchlab.datasets.split import SplitDataset
+from pytorchlab.modules.ae import AutoEncoder2dModule
+from pytorchlab.transforms.noise import GaussianNoise
 
 
-def main():
-    from torch.utils.data import Dataset
+class NoiseDataset(Dataset):
+    def __init__(self, dataset: Dataset, mean: float = 0, std: float = 0.1) -> None:
+        super().__init__()
+        self.dataset = dataset
+        self.transform = GaussianNoise(mean=mean, std=std)
 
-    from pytorchlab.datamodules.from_datasets import DataModule
-    from pytorchlab.datasets.split import SplitDataset
-    from pytorchlab.modules.autoencoder.ae import AutoEncoder2dModule
-    from pytorchlab.transforms.noise import GaussianNoise
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, index):
+        x, y = self.dataset[index][:2]
+        noise_x = self.transform(x).detach()
+        return noise_x, x, y
+
+
+def main(root="dataset", epochs: int = 10, limit_batches: int | float | None = None):
 
     model = AutoEncoder2dModule(
         in_channel=1,
@@ -16,11 +35,8 @@ def main():
         depth=4,
     )
 
-    from torchvision import transforms
-    from torchvision.datasets import MNIST
-
     dataset = MNIST(
-        root="dataset",
+        root=root,
         train=True,
         download=True,
         transform=transforms.Compose(
@@ -31,26 +47,12 @@ def main():
         ),
     )
 
-    class NoiseDataset(Dataset):
-        def __init__(self, dataset: Dataset, mean: float = 0, std: float = 0.1) -> None:
-            super().__init__()
-            self.dataset = dataset
-            self.transform = GaussianNoise(mean=mean, std=std)
-
-        def __len__(self):
-            return len(self.dataset)
-
-        def __getitem__(self, index):
-            x, y = self.dataset[index][:2]
-            noise_x = self.transform(x).detach()
-            return noise_x, x, y
-
     dataset = NoiseDataset(dataset, mean=0, std=0.1)
 
     train_dataset = SplitDataset(dataset, 0.2)
     val_dataset = SplitDataset(dataset, 0.2, train=False)
     test_dataset = MNIST(
-        root="dataset",
+        root=root,
         train=False,
         download=True,
         transform=transforms.Compose(
@@ -71,14 +73,9 @@ def main():
         batch_size=128,
         num_workers=20,
     )
-    from lightning.pytorch import Trainer
-    from lightning.pytorch.loggers import TensorBoardLogger
-
-    from pytorchlab.callbacks.image import ImageCallback
-    from pytorchlab.callbacks.loss import LossCallback
 
     trainer = Trainer(
-        max_epochs=10,
+        max_epochs=epochs,
         devices=1,
         logger=[TensorBoardLogger("lightning_logs/test_autoencoder2d", "mnist")],
         callbacks=[
@@ -91,11 +88,18 @@ def main():
             ),
             LossCallback(),
         ],
+        limit_train_batches=limit_batches,
+        limit_val_batches=limit_batches,
+        limit_test_batches=limit_batches,
+        limit_predict_batches=limit_batches,
     )
     trainer.fit(model, datamodule=datamodule)
     trainer.test(model, datamodule=datamodule)
     trainer.predict(model, datamodule=datamodule)
-    
+
+
+def test_AutoEncoder2dModule():
+    main(epochs=1, limit_batches=1)
 
 
 if __name__ == "__main__":

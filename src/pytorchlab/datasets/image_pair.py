@@ -1,9 +1,8 @@
 import random
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from PIL import Image
-from torch import Tensor
 from torch.utils.data import Dataset
 
 
@@ -14,19 +13,9 @@ class ImagePairDataset(Dataset):
         A_name: str,
         B_name: str,
         shuffle: bool = False,
-        transform: Callable[[Iterable], Tensor] = None,
-        target_transform: Callable[[Iterable], Tensor] = None,
+        transform: Callable | None = None,
+        target_transform: Callable | None = None,
     ) -> None:
-        """
-        Dataset in form of (image_A, image_B)
-
-        Args:
-            root (str): root path of dataset
-            A_name (str): directory name of image_A below root path
-            B_name (str): directory name of image_B below root path
-            transform (Callable[[Iterable],Tensor], optional): transformation for image_A. Defaults to None.
-            target_transform (Callable[[Iterable],Tensor], optional): transformation for image_B. Defaults to None.
-        """
         super().__init__()
         self.root = Path(root)
         self.root_A = self.root / A_name
@@ -34,8 +23,10 @@ class ImagePairDataset(Dataset):
         self.transform = transform
         self.target_transform = target_transform if target_transform else transform
 
-        if not self.root_A.exists() or not self.root_B.exists():
-            raise FileNotFoundError("Dataset not found")
+        if not self.root_A.exists():
+            raise FileNotFoundError(f"No such path: {self.root_A}")
+        if not self.root_B.exists():
+            raise FileNotFoundError(f"No such path: {self.root_A}")
 
         self.paths_A = sorted(
             [x for x in self.root_A.glob("*")],

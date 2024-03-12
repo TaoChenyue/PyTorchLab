@@ -1,10 +1,11 @@
-from typing import Mapping, Sequence
+from typing import Sequence
 
 import torch
+from jsonargparse import lazy_instance
 from lightning.pytorch import LightningModule
 from torch import Tensor, nn
 
-from pytorchlab.modules.autoencoder.components import AutoEncoder2d
+from pytorchlab.models.ae import AutoEncoder2d
 from pytorchlab.type_hint import ModuleCallable
 
 
@@ -19,15 +20,12 @@ class AutoEncoder2dModule(LightningModule):
         nf: int = 64,
         depth: int = 8,
         hold_depth: int = 3,
-        norm: ModuleCallable | None = None,
-        activation: nn.Module | None = None,
-        out_activation: nn.Module | None = None,
-        criterion: nn.Module | None = None,
+        norm: ModuleCallable = nn.Identity,
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        out_activation: nn.Module = lazy_instance(nn.Tanh),
+        criterion: nn.Module = lazy_instance(nn.MSELoss),
     ):
         super().__init__()
-        activation = nn.ReLU(inplace=True) if activation is None else activation
-        out_activation = nn.Tanh() if out_activation is None else out_activation
-        criterion = nn.MSELoss() if criterion is None else criterion
 
         self.model = AutoEncoder2d(
             in_channel=in_channel,
@@ -54,7 +52,7 @@ class AutoEncoder2dModule(LightningModule):
         x, y = batch[0:2]
         pred = self(x)
         loss = self.criterion(pred, y)
-        return {"loss": loss, "output": pred}
+        return {"loss": loss, "outputs": {"images": [pred]}}
 
     def training_step(self, batch: Sequence[Tensor], batch_idx: int):
         return self._step(batch, batch_idx)

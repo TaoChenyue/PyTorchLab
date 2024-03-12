@@ -20,24 +20,22 @@ class LossCallback(Callback):
         self.on_step = on_step
         self.sync_dist = sync_dist
 
-    def _batch_end(
+    def _get_losses(self, outputs: Tensor | Mapping[str, Any] | None):
+        if not isinstance(outputs, Mapping):
+            return None
+        losses = {}
+        for k, v in outputs.items():
+            if "loss" in k:
+                losses[k] = v
+        return losses
+
+    def _log(
         self,
-        trainer: Trainer,
         pl_module: LightningModule,
-        outputs: Tensor | Mapping[str, Any] | None,
-        batch: Any,
-        batch_idx: int,
-        dataloader_idx: int = 0,
-        mode: Literal["train", "val", "test"] = "train",
-    ) -> None:
-        if outputs is None:
-            return
-        if isinstance(outputs, Tensor):
-            loss = outputs
-        if isinstance(outputs, Mapping):
-            loss = outputs.get("loss", None)
-            if loss is None:
-                return
+        name: str,
+        loss: Tensor,
+        mode: Literal["train", "val", "test"],
+    ):
         pl_module.log(
             f"{mode}_loss",
             loss,
@@ -46,6 +44,20 @@ class LossCallback(Callback):
             on_epoch=self.on_epoch,
             on_step=self.on_step,
         )
+
+    def _batch_end(
+        self,
+        mode: Literal["train", "val", "test"],
+        trainer: Trainer,
+        pl_module: LightningModule,
+        outputs: Tensor | Mapping[str, Any] | None,
+        batch: Any,
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ):
+        losses = self._get_losses(outputs)
+        for k, v in losses.items():
+            self._log(pl_module, k, v, mode)
 
     def on_train_batch_end(
         self,
@@ -56,7 +68,12 @@ class LossCallback(Callback):
         batch_idx: int,
     ) -> None:
         return self._batch_end(
-            trainer, pl_module, outputs, batch, batch_idx, mode="train"
+            "train",
+            trainer,
+            pl_module,
+            outputs,
+            batch,
+            batch_idx,
         )
 
     def on_validation_batch_end(
@@ -69,13 +86,13 @@ class LossCallback(Callback):
         dataloader_idx: int = 0,
     ) -> None:
         return self._batch_end(
+            "val",
             trainer,
             pl_module,
             outputs,
             batch,
             batch_idx,
-            mode="val",
-            dataloader_idx=dataloader_idx,
+            # dataloader_idx=dataloader_idx,
         )
 
     def on_test_batch_end(
@@ -88,11 +105,11 @@ class LossCallback(Callback):
         dataloader_idx: int = 0,
     ) -> None:
         return self._batch_end(
+            "test",
             trainer,
             pl_module,
             outputs,
             batch,
             batch_idx,
-            mode="test",
-            dataloader_idx=dataloader_idx,
+            # dataloader_idx=dataloader_idx,
         )

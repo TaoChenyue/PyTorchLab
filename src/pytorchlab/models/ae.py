@@ -1,7 +1,52 @@
+import torch
+from jsonargparse import lazy_instance
 from torch import Tensor, nn
 
-from pytorchlab.models.convolution import AutoEncoder2dBlock
+from pytorchlab.models.conv import Conv2dBlock
+from pytorchlab.models.convtranspose import ConvTranspose2dBlock
 from pytorchlab.type_hint import ModuleCallable
+
+
+class AutoEncoder2dBlock(nn.Module):
+    def __init__(
+        self,
+        last_channel: int,
+        channel: int,
+        kernel_size: int = 4,
+        stride: int = 2,
+        padding: int = 1,
+        norm: ModuleCallable = nn.Identity,
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        out_activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        sub_module: nn.Module = lazy_instance(nn.Identity),
+    ) -> None:
+        super().__init__()
+
+        self.encoder = Conv2dBlock(
+            in_channels=last_channel,
+            out_channels=channel,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            norm=norm,
+            activation=activation,
+        )
+        self.decoder = ConvTranspose2dBlock(
+            in_channels=channel,
+            out_channels=last_channel,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            norm=norm,
+            activation=out_activation,
+        )
+        self.sub_module = sub_module
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.encoder(x)
+        x = self.sub_module(x)
+        x = self.decoder(x)
+        return x
 
 
 class AutoEncoder2d(nn.Module):
@@ -15,13 +60,11 @@ class AutoEncoder2d(nn.Module):
         nf: int = 64,
         depth: int = 8,
         hold_depth: int = 3,
-        norm: ModuleCallable = None,
-        activation: nn.Module | None = None,
-        out_activation: nn.Module | None = None,
+        norm: ModuleCallable = nn.Identity,
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        out_activation: nn.Module = lazy_instance(nn.Tanh),
     ):
         super().__init__()
-        activation = activation or nn.ReLU(inplace=True)
-        out_activation = out_activation or nn.Tanh()
 
         df_num = 2**hold_depth
         aeblock = AutoEncoder2dBlock(

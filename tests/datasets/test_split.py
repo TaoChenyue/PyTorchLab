@@ -1,5 +1,7 @@
+from pytorchlab.datasets.split import SplitDataset
+
+
 def test_SplitDataset():
-    from pytorchlab.datasets.split import SplitDataset
 
     a = list(range(10))
     d1 = SplitDataset(a, 0.5, seed=42, train=True)

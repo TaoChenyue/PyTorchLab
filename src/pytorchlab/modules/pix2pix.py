@@ -10,7 +10,7 @@ from torch.optim.lr_scheduler import ConstantLR
 from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
 
 
-class Pix2Pix(LightningModule):
+class Pix2PixModule(LightningModule):
     def __init__(
         self,
         generator: nn.Module,
@@ -20,8 +20,8 @@ class Pix2Pix(LightningModule):
         lambda_image_loss: float = 100,
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
-        lr_g: LRSchedulerCallable = lazy_instance(ConstantLR, factor=1.0),
-        lr_d: LRSchedulerCallable = lazy_instance(ConstantLR, factor=1.0),
+        lr_g: LRSchedulerCallable = ConstantLR,
+        lr_d: LRSchedulerCallable = ConstantLR,
     ):
         super().__init__()
         # do not optimize model automatically
@@ -58,7 +58,7 @@ class Pix2Pix(LightningModule):
         optimizer_g: torch.optim.Optimizer = self.optimizers()[0]
         optimizer_g.zero_grad()
 
-        g_loss = self.generator_step(batch)
+        g_loss, fake_B = self.generator_step(batch)
 
         self.manual_backward(g_loss)
         optimizer_g.step()
@@ -76,22 +76,13 @@ class Pix2Pix(LightningModule):
         lr_d = self.lr_schedulers()[1]
         lr_d.step()
 
-        self.log_dict(
-            {
-                "g_loss": g_loss,
-                "d_loss": d_loss,
-                # "lr_g": self.optimizer_g.param_groups[0]["lr"],
-                # "lr_d": self.optimizer_d.param_groups[0]["lr"],
-            },
-            sync_dist=True,
-            prog_bar=True,
-        )
+        return {"g_loss": g_loss, "d_loss": d_loss, "outputs": {"images": [fake_B]}}
 
     def generator_step(self, batch: Sequence[torch.Tensor]):
         real_A, real_B = batch[0:2]
         fake_B = self.generator(real_A)
         output: torch.Tensor = self.discriminator(torch.cat((real_A, fake_B), dim=1))
-        valid = torch.ones(size=output.shape).to(self.device)
+        valid = torch.ones_like(output)
         gan_loss = self.criterion_gan(
             output,
             valid,
@@ -99,37 +90,46 @@ class Pix2Pix(LightningModule):
         image_loss = self.criterion_image(fake_B, real_B)
         g_loss = gan_loss + self.lambda_image_loss * image_loss
 
-        return g_loss
+        return g_loss, fake_B
 
     def discriminator_step(self, batch: Sequence[torch.Tensor]):
         real_A, real_B = batch[0:2]
         # real loss
-        output_real: torch.Tensor = self.discriminator(
-            torch.cat((real_A, real_B), dim=1)
-        )
-        valid = torch.ones(size=output_real.shape).to(self.device)
+        output: torch.Tensor = self.discriminator(torch.cat((real_A, real_B), dim=1))
+        valid = torch.ones_like(output)
         real_loss = self.criterion_gan(
-            output_real,
+            output,
             valid,
         )
         # fake loss
         fake_B = self.generator(real_A)
-        output_fake: torch.Tensor = self.discriminator(
-            torch.cat((real_A, fake_B), dim=1)
-        )
-        fake = torch.zeros(size=output_fake.shape).to(self.device)
+        output = self.discriminator(torch.cat((real_A, fake_B), dim=1))
+        fake = torch.zeros_like(output)
         fake_loss = self.criterion_gan(
-            output_fake,
+            output,
             fake,
         )
-        d_loss = real_loss + fake_loss
+        d_loss = (real_loss + fake_loss) / 2
 
         return d_loss
 
-    def validation_step(self, batch: Sequence[torch.Tensor], batch_idx: int) -> Any:
-        real_A, real_B = batch[0:2]
-        fake_B = self(real_A)
-        return fake_B
+    def _step(
+        self,
+        batch: Sequence[torch.Tensor],
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ) -> Any:
+        g_loss, fake_B = self.generator_step(batch)
+        d_loss = self.discriminator_step(batch)
+        return {"g_loss": g_loss, "d_loss": d_loss, "outputs": {"images": [fake_B]}}
+
+    def validation_step(
+        self,
+        batch: Sequence[torch.Tensor],
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ) -> Any:
+        return self._step(batch, batch_idx, dataloader_idx)
 
     def test_step(
         self,
@@ -137,9 +137,7 @@ class Pix2Pix(LightningModule):
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> Any:
-        real_A, real_B = batch[0:2]
-        fake_B = self(real_A)
-        return fake_B
+        return self._step(batch, batch_idx, dataloader_idx)
 
     def predict_step(
         self,
@@ -147,6 +145,4 @@ class Pix2Pix(LightningModule):
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> Any:
-        real_A, real_B = batch[0:2]
-        fake_B = self(real_A)
-        return fake_B
+        return self._step(batch, batch_idx, dataloader_idx)

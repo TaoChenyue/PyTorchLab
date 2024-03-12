@@ -8,7 +8,7 @@ class SplitDataset(Dataset):
     def __init__(
         self,
         dataset: Sequence,
-        split: int | float,
+        split: int | float = 0.2,
         seed: int | None = 42,
         train: bool = True,
     ):
