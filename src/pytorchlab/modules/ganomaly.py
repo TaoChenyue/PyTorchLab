@@ -11,27 +11,6 @@ from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
 
 
 class GANomalyGeneratorLoss(nn.Module):
-    def forward(
-        self,
-        fake_output: torch.Tensor,
-        fake_images: torch.Tensor,
-        target_images: torch.Tensor,
-        latent_i: torch.Tensor,
-        latent_o: torch.Tensor,
-    ) -> torch.Tensor:
-        raise NotImplementedError
-
-
-class GANomalyDiscriminatorLoss(nn.Module):
-    def forward(
-        self,
-        fake_output: torch.Tensor,
-        real_output: torch.Tensor,
-    ):
-        raise NotImplementedError
-
-
-class GeneratorLoss(GANomalyGeneratorLoss):
     def __init__(
         self,
         criterion_gan: nn.Module = lazy_instance(torch.nn.MSELoss),
@@ -68,7 +47,7 @@ class GeneratorLoss(GANomalyGeneratorLoss):
         )
 
 
-class DiscriminatorLoss(GANomalyDiscriminatorLoss):
+class GANomalyDiscriminatorLoss(nn.Module):
     def __init__(self, criterion: nn.Module = lazy_instance(torch.nn.MSELoss)):
         super().__init__()
         self.criterion = criterion
@@ -111,9 +90,11 @@ class GANomalyModule(LightningModule):
         self,
         generator: nn.Module,
         discriminator: nn.Module,
-        criterion_generator: GANomalyGeneratorLoss = lazy_instance(GeneratorLoss),
+        criterion_generator: GANomalyGeneratorLoss = lazy_instance(
+            GANomalyGeneratorLoss
+        ),
         criterion_discriminator: GANomalyDiscriminatorLoss = lazy_instance(
-            DiscriminatorLoss
+            GANomalyDiscriminatorLoss
         ),
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
@@ -154,7 +135,7 @@ class GANomalyModule(LightningModule):
         optimizer_g: torch.optim.Optimizer = self.optimizers()[0]
         optimizer_g.zero_grad()
 
-        g_loss, _ = self.generator_step(batch)
+        g_loss, fake_B, latent_i, latent_o = self.generator_step(batch)
 
         self.manual_backward(g_loss)
         optimizer_g.step()
@@ -179,7 +160,7 @@ class GANomalyModule(LightningModule):
         fake_B, latent_i, latent_o = self.generator(real_A)
         output: torch.Tensor = self.discriminator(torch.cat((real_A, fake_B), dim=1))
         g_loss = self.criterion_generator(output, fake_B, real_B, latent_i, latent_o)
-        return g_loss, fake_B
+        return g_loss, fake_B, latent_i, latent_o
 
     def discriminator_step(self, batch: Sequence[torch.Tensor]):
         real_A, real_B = batch[0:2]
@@ -200,9 +181,19 @@ class GANomalyModule(LightningModule):
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> Any:
-        g_loss, fake_B = self.generator_step(batch)
+        real_A, real_B, labels = batch[0:3]
+        g_loss, fake_B, latent_i, latent_o = self.generator_step(batch)
         d_loss = self.discriminator_step(batch)
-        return {"g_loss": g_loss, "d_loss": d_loss, "outputs": {"images": [fake_B]}}
+        score = torch.mean(torch.pow(latent_i - latent_o, 2), dim=(1, 2, 3)).view(-1)
+        return {
+            "g_loss": g_loss,
+            "d_loss": d_loss,
+            "inputs": {"images": [real_B], "labels": labels},
+            "outputs": {
+                "images": [fake_B],
+            },
+            "metrics": {"anomaly_score": score},
+        }
 
     def validation_step(
         self,

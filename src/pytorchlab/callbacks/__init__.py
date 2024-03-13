@@ -1,2 +1,2 @@
-from .image import BaseImageCallback, ImageCallback
+from .image import ImageCallback
 from .loss import LossCallback

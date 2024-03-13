@@ -1,20 +1,20 @@
 import torch
 from lightning.pytorch import LightningModule, Trainer
+from lightning.pytorch.callbacks import Callback
 from torchvision.utils import make_grid, save_image
 
-from pytorchlab.callbacks.image.base import BaseImageCallback
+from pytorchlab.callbacks.image.utils import get_save_dir
 
 
-class CGANCallback(BaseImageCallback):
+class CGANCallback(Callback):
     def __init__(
         self,
         latent_dim: int,
         num_classes: int,
         nums: int = 8,
-        on_epoch: bool = False,
         **kwargs,
     ):
-        super().__init__(on_epoch=on_epoch)
+        super().__init__()
         self.latent_dim = latent_dim
         self.num_classes = num_classes
         self.nums = nums
@@ -39,5 +39,5 @@ class CGANCallback(BaseImageCallback):
     def on_train_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         images = self._sample_images(pl_module)
         images = make_grid(images, **self.kwargs)
-        save_path = self._get_save_dir("train", trainer, pl_module)
+        save_path = get_save_dir("train", trainer, pl_module)
         save_image(images, save_path / "output.png")

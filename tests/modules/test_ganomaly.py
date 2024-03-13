@@ -5,7 +5,7 @@ from lightning.pytorch import Trainer
 from lightning.pytorch.loggers import TensorBoardLogger
 from torchvision import transforms
 
-from pytorchlab.callbacks.image import ImageCallback
+from pytorchlab.callbacks.anomaly import AnomalyCallback
 from pytorchlab.callbacks.loss import LossCallback
 from pytorchlab.datamodules.from_datasets import DataModule
 from pytorchlab.datasets.anomaly import AnomalyDataset
@@ -86,13 +86,12 @@ def main(root="dataset", epochs: int = 100, limit_batches: int | float | None = 
         logger=[TensorBoardLogger("lightning_logs/test_ganomaly", "mvtec_bottle")],
         callbacks=[
             LossCallback(),
-            ImageCallback(
-                batch_range=(0, 10),
-                batch_indexes=[0, 1],
-                image_slice=(0, 4),
-                nrow=2,
-                padding=2,
-            ),
+            # ImageCallback(
+            #     image_slice=(0, 4),
+            #     nrow=2,
+            #     padding=2,
+            # ),
+            AnomalyCallback(),
         ],
         limit_train_batches=limit_batches,
         limit_val_batches=limit_batches,
@@ -100,7 +99,10 @@ def main(root="dataset", epochs: int = 100, limit_batches: int | float | None = 
         limit_predict_batches=limit_batches,
     )
     trainer.fit(model, datamodule=datamodule)
-    # trainer.test(model, datamodule=datamodule)
+    trainer.test(
+        model,
+        datamodule=datamodule,
+    )
     # trainer.predict(model, datamodule=datamodule)
 
 

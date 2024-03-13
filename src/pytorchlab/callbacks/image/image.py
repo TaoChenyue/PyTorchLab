@@ -1,43 +1,33 @@
-import random
 from typing import Any, Literal, Mapping, Sequence
 
 from lightning import LightningModule, Trainer
+from lightning.pytorch.callbacks import Callback
 from torch import Tensor
 from torchvision.utils import make_grid, save_image
 
-from pytorchlab.callbacks.image.base import BaseImageCallback
+from pytorchlab.callbacks.image.utils import get_save_dir
 
 
-class ImageCallback(BaseImageCallback):
+class ImageCallback(Callback):
     def __init__(
         self,
-        batch_range: tuple[int, int] = (0, 0),
-        batch_indexes: list[int] = [],
+        batch: int = 0,
         image_slice: tuple[int | None, int | None, int | None] = (None, None, None),
-        on_epoch: bool = False,
         **kwargs,
     ) -> None:
-        super().__init__(on_epoch=on_epoch)
-        self.batch_range = batch_range
-        self.batch_now: int | None = None
-        self.batch_indexes = batch_indexes
+        super().__init__()
+        self.batch: int = batch
         self.image_slice = slice(*image_slice)
-        self.on_epoch = on_epoch
         self.kwargs = kwargs
-
-    def _epoch_start(self, trainer: Trainer, pl_module: LightningModule):
-        self.batch_now = random.randint(*self.batch_range)
-
-    def _epoch_end(self, trainer: Trainer, pl_module: LightningModule):
-        self.batch_now = None
 
     def _get_images(
         self, outputs: Tensor | Mapping[str, Any] | None
     ) -> list[Tensor] | None:
         if not isinstance(outputs, Mapping):
-            return None
-        image = outputs.get("outputs", {}).get("images", [])
-        return image
+            return [], []
+        input_images = outputs.get("inputs", {}).get("images", [])
+        output_images = outputs.get("outputs", {}).get("images", [])
+        return input_images, output_images
 
     def _batch_end(
         self,
@@ -49,14 +39,12 @@ class ImageCallback(BaseImageCallback):
         dataloader_idx: int = 0,
         mode: Literal["val", "test", "predict"] = "val",
     ) -> None:
-        if mode == "val" and batch_idx != self.batch_now:
+        if mode == "val" and batch_idx != self.batch:
             return
 
-        images = self._get_images(outputs)
-        if images is None:
-            return
+        input_images, output_images = self._get_images(outputs)
 
-        save_dir = self._get_save_dir(
+        save_dir = get_save_dir(
             mode,
             trainer,
             pl_module,
@@ -67,28 +55,18 @@ class ImageCallback(BaseImageCallback):
             return
 
         images_dict = {
-            f"input_{index}.png": batch[index][self.image_slice]
-            for index in self.batch_indexes
+            f"input_{index}.png": input_images[index][self.image_slice]
+            for index in range(len(input_images))
         }
         images_dict.update(
             {
-                f"output_{index}.png": images[index][self.image_slice]
-                for index in range(len(images))
+                f"output_{index}.png": output_images[index][self.image_slice]
+                for index in range(len(output_images))
             }
         )
 
         for name, image in images_dict.items():
             save_image(make_grid(image, **self.kwargs), save_dir / name)
-
-    def on_validation_epoch_start(
-        self, trainer: Trainer, pl_module: LightningModule
-    ) -> None:
-        return self._epoch_start(trainer, pl_module)
-
-    def on_validation_epoch_end(
-        self, trainer: Trainer, pl_module: LightningModule
-    ) -> None:
-        return self._epoch_end(trainer, pl_module)
 
     def on_validation_batch_end(
         self,
@@ -109,12 +87,6 @@ class ImageCallback(BaseImageCallback):
             mode="val",
         )
 
-    def on_test_epoch_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
-        return self._epoch_start(trainer, pl_module)
-
-    def on_test_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
-        return self._epoch_end(trainer, pl_module)
-
     def on_test_batch_end(
         self,
         trainer: Trainer,
@@ -133,16 +105,6 @@ class ImageCallback(BaseImageCallback):
             dataloader_idx=dataloader_idx,
             mode="test",
         )
-
-    def on_predict_epoch_start(
-        self, trainer: Trainer, pl_module: LightningModule
-    ) -> None:
-        return self._epoch_start(trainer, pl_module)
-
-    def on_predict_epoch_end(
-        self, trainer: Trainer, pl_module: LightningModule
-    ) -> None:
-        return self._epoch_end(trainer, pl_module)
 
     def on_predict_batch_end(
         self,
