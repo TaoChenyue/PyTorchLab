@@ -10,17 +10,19 @@ from torch.optim.lr_scheduler import ConstantLR
 from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
 
 
-class Pix2PixGeneratorLoss(nn.Module):
+class GANomalyGeneratorLoss(nn.Module):
     def forward(
         self,
         fake_output: torch.Tensor,
         fake_images: torch.Tensor,
         target_images: torch.Tensor,
+        latent_i: torch.Tensor,
+        latent_o: torch.Tensor,
     ) -> torch.Tensor:
         raise NotImplementedError
 
 
-class Pix2PixDiscriminatorLoss(nn.Module):
+class GANomalyDiscriminatorLoss(nn.Module):
     def forward(
         self,
         fake_output: torch.Tensor,
@@ -29,33 +31,44 @@ class Pix2PixDiscriminatorLoss(nn.Module):
         raise NotImplementedError
 
 
-class GeneratorLoss(Pix2PixGeneratorLoss):
+class GeneratorLoss(GANomalyGeneratorLoss):
     def __init__(
         self,
         criterion_gan: nn.Module = lazy_instance(torch.nn.MSELoss),
         criterion_image: nn.Module = lazy_instance(torch.nn.L1Loss),
+        criterion_code: nn.Module = lazy_instance(torch.nn.SmoothL1Loss),
         lambda_gan: float = 1,
-        lambda_image: float = 100,
+        lambda_image: float = 50,
+        lambda_code: float = 1,
     ) -> None:
         super().__init__()
         self.criterion_gan = criterion_gan
         self.criterion_image = criterion_image
+        self.criterion_code = criterion_code
         self.lambda_gan = lambda_gan
         self.lambda_image = lambda_image
+        self.lambda_code = lambda_code
 
     def forward(
         self,
         fake_output: torch.Tensor,
         fake_images: torch.Tensor,
         target_images: torch.Tensor,
+        latent_i: torch.Tensor,
+        latent_o: torch.Tensor,
     ) -> torch.Tensor:
         valid = torch.ones_like(fake_output)
         loss_gan = self.criterion_gan(fake_output, valid)
         loss_image = self.criterion_image(fake_images, target_images)
-        return self.lambda_gan * loss_gan + self.lambda_image * loss_image
+        loss_code = self.criterion_code(latent_i, latent_o)
+        return (
+            self.lambda_gan * loss_gan
+            + self.lambda_image * loss_image
+            + self.lambda_code * loss_code
+        )
 
 
-class DiscriminatorLoss(Pix2PixDiscriminatorLoss):
+class DiscriminatorLoss(GANomalyDiscriminatorLoss):
     def __init__(self, criterion: nn.Module = lazy_instance(torch.nn.MSELoss)):
         super().__init__()
         self.criterion = criterion
@@ -72,13 +85,34 @@ class DiscriminatorLoss(Pix2PixDiscriminatorLoss):
         return (loss_real + loss_fake) / 2
 
 
-class Pix2PixModule(LightningModule):
+class GANomalyGenerator(nn.Module):
+    def __init__(
+        self,
+        encoder: nn.Module,
+        decoder: nn.Module,
+        encoder2: nn.Module,
+    ):
+        super().__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+        self.encoder2 = encoder2
+
+    def forward(
+        self, x: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        latent_i = self.encoder(x)
+        image = self.decoder(latent_i)
+        latent_o = self.encoder2(image)
+        return image, latent_i, latent_o
+
+
+class GANomalyModule(LightningModule):
     def __init__(
         self,
         generator: nn.Module,
         discriminator: nn.Module,
-        criterion_generator: Pix2PixGeneratorLoss = lazy_instance(GeneratorLoss),
-        criterion_discriminator: Pix2PixDiscriminatorLoss = lazy_instance(
+        criterion_generator: GANomalyGeneratorLoss = lazy_instance(GeneratorLoss),
+        criterion_discriminator: GANomalyDiscriminatorLoss = lazy_instance(
             DiscriminatorLoss
         ),
         optimizer_g: OptimizerCallable = torch.optim.Adam,
@@ -142,15 +176,14 @@ class Pix2PixModule(LightningModule):
 
     def generator_step(self, batch: Sequence[torch.Tensor]):
         real_A, real_B = batch[0:2]
-        fake_B = self.generator(real_A)
+        fake_B, latent_i, latent_o = self.generator(real_A)
         output: torch.Tensor = self.discriminator(torch.cat((real_A, fake_B), dim=1))
-        g_loss = self.criterion_generator(output, fake_B, real_B)
-
+        g_loss = self.criterion_generator(output, fake_B, real_B, latent_i, latent_o)
         return g_loss, fake_B
 
     def discriminator_step(self, batch: Sequence[torch.Tensor]):
         real_A, real_B = batch[0:2]
-        fake_B = self.generator(real_A)
+        fake_B, latent_i, latent_o = self.generator(real_A)
         # real loss
         output_real: torch.Tensor = self.discriminator(
             torch.cat((real_A, real_B), dim=1)

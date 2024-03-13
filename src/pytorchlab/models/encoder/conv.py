@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import torch
 from jsonargparse import lazy_instance
 from torch import nn
@@ -29,3 +31,32 @@ class Conv2dBlock(nn.Module):
         x = self.norm(x)
         x = self.activation(x)
         return x
+
+
+class SequentialConv2dBlock(nn.Module):
+    def __init__(
+        self,
+        paras: Sequence[tuple[int, int, int, int, int]],
+        norm: ModuleCallable = nn.Identity,
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        padding_method: ModuleCallable = nn.ZeroPad2d,
+    ):
+        super().__init__()
+        self.model = nn.Sequential(
+            *[
+                Conv2dBlock(
+                    in_channels=para[0],
+                    out_channels=para[1],
+                    kernel_size=para[2],
+                    stride=para[3],
+                    padding=para[4],
+                    norm=norm,
+                    activation=activation,
+                    padding_method=padding_method,
+                )
+                for para in paras
+            ]
+        )
+
+    def forward(self, x: torch.Tensor):
+        return self.model(x)

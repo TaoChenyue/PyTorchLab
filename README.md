@@ -20,7 +20,7 @@ check supported version of [pytorch](https://pytorch.org/get-started/previous-ve
 git clone https://github.com/TaoChenyue/PyTorchLab.git
 cd PyTorchLab
 pip install -e .
-...
+```
 
 ## Datasets 
 [BaiduNetDisk(Code: mqvi)](https://pan.baidu.com/s/1GFrlHWzVxKI8HoCbWTUfGw?pwd=mqvi)
