@@ -5,7 +5,7 @@ from jsonargparse import lazy_instance
 from lightning.pytorch import LightningModule
 from torch import Tensor, nn
 
-from pytorchlab.models.ae import AutoEncoder2d
+from pytorchlab.models.encoder_decoder import AutoEncoder2d
 from pytorchlab.type_hint import ModuleCallable
 
 
@@ -21,15 +21,15 @@ class AutoEncoder2dModule(LightningModule):
         depth: int = 8,
         hold_depth: int = 3,
         norm: ModuleCallable = nn.Identity,
-        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
-        out_activation: nn.Module = lazy_instance(nn.Tanh),
+        down_activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        up_activation: nn.Module = lazy_instance(nn.Tanh),
         criterion: nn.Module = lazy_instance(nn.MSELoss),
     ):
         super().__init__()
 
         self.model = AutoEncoder2d(
-            in_channel=in_channel,
-            out_channel=out_channel,
+            in_channels=in_channel,
+            out_channels=out_channel,
             kernel_size=kernel_size,
             stride=stride,
             padding=padding,
@@ -37,8 +37,8 @@ class AutoEncoder2dModule(LightningModule):
             depth=depth,
             hold_depth=hold_depth,
             norm=norm,
-            activation=activation,
-            out_activation=out_activation,
+            down_activation=down_activation,
+            up_activation=up_activation,
         )
         self.criterion = criterion
 

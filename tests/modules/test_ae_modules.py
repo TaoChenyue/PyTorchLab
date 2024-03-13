@@ -1,6 +1,6 @@
 from lightning.pytorch import Trainer
+from lightning.pytorch.callbacks import TQDMProgressBar
 from lightning.pytorch.loggers import TensorBoardLogger
-from torch import nn
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.datasets import MNIST
@@ -9,9 +9,7 @@ from pytorchlab.callbacks.image import ImageCallback
 from pytorchlab.callbacks.loss import LossCallback
 from pytorchlab.datamodules.from_datasets import DataModule
 from pytorchlab.datasets.split import SplitDataset
-from pytorchlab.models.encoder.conv import Conv2dBlock
-from pytorchlab.models.encoder_decoder import AutoEncoder2d
-from pytorchlab.modules.pix2pix import Pix2PixModule
+from pytorchlab.modules.ae import AutoEncoder2dModule
 from pytorchlab.transforms.noise import GaussianNoise
 
 
@@ -31,18 +29,11 @@ class NoiseDataset(Dataset):
 
 
 def main(root="dataset", epochs: int = 10, limit_batches: int | float | None = None):
-    model = Pix2PixModule(
-        generator=AutoEncoder2d(
-            in_channels=1,
-            out_channels=1,
-            depth=4,
-        ),
-        discriminator=nn.Sequential(
-            Conv2dBlock(2, 64),
-            Conv2dBlock(64, 128),
-            Conv2dBlock(128, 64),
-            Conv2dBlock(64, 1),
-        ),
+
+    model = AutoEncoder2dModule(
+        in_channel=1,
+        out_channel=1,
+        depth=4,
     )
 
     dataset = MNIST(
@@ -87,7 +78,7 @@ def main(root="dataset", epochs: int = 10, limit_batches: int | float | None = N
     trainer = Trainer(
         max_epochs=epochs,
         devices=1,
-        logger=[TensorBoardLogger("lightning_logs/test_pix2pix", "mnist")],
+        logger=[TensorBoardLogger("lightning_logs/test_autoencoder2d", "mnist")],
         callbacks=[
             ImageCallback(
                 batch_range=(0, 100),
@@ -97,6 +88,7 @@ def main(root="dataset", epochs: int = 10, limit_batches: int | float | None = N
                 padding=2,
             ),
             LossCallback(),
+            TQDMProgressBar(refresh_rate=10),
         ],
         limit_train_batches=limit_batches,
         limit_val_batches=limit_batches,
@@ -108,7 +100,7 @@ def main(root="dataset", epochs: int = 10, limit_batches: int | float | None = N
     trainer.predict(model, datamodule=datamodule)
 
 
-def test_Pix2PixModule():
+def test_AutoEncoder2dModule():
     main(epochs=1, limit_batches=1)
 
 

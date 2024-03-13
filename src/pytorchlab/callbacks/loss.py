@@ -29,22 +29,6 @@ class LossCallback(Callback):
                 losses[k] = v
         return losses
 
-    def _log(
-        self,
-        pl_module: LightningModule,
-        name: str,
-        loss: Tensor,
-        mode: Literal["train", "val", "test"],
-    ):
-        pl_module.log(
-            f"{mode}_loss",
-            loss,
-            prog_bar=self.prog_bar if mode == "train" else False,
-            sync_dist=self.sync_dist,
-            on_epoch=self.on_epoch,
-            on_step=self.on_step,
-        )
-
     def _batch_end(
         self,
         mode: Literal["train", "val", "test"],
@@ -56,8 +40,13 @@ class LossCallback(Callback):
         dataloader_idx: int = 0,
     ):
         losses = self._get_losses(outputs)
-        for k, v in losses.items():
-            self._log(pl_module, k, v, mode)
+        pl_module.log_dict(
+            {f"{mode}_{k}": v for k, v in losses.items()},
+            prog_bar=self.prog_bar if mode in ["train", "val"] else False,
+            sync_dist=self.sync_dist,
+            on_epoch=self.on_epoch,
+            on_step=self.on_step,
+        )
 
     def on_train_batch_end(
         self,

@@ -1,2 +1,2 @@
-from .classfication import *
-from .generation import *
+from .image import BaseImageCallback, ImageCallback
+from .loss import LossCallback
