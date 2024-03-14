@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Callable, Iterable
 
 from lightning.pytorch import LightningDataModule
 from lightning.pytorch.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
@@ -15,21 +15,24 @@ class DataModule(LightningDataModule):
         test_datasets: Dataset | Iterable[Dataset] | None = None,
         predict_datasets: Dataset | Iterable[Dataset] | None = None,
         batch_size: int = 1,
-        num_workers: int = 0,
+        num_workers: int = 4,
         pin_memory: bool = True,
         drop_last: bool = False,
+        collate_fn: Callable | None = None,
     ) -> None:
         super().__init__()
         self.train_datasets = self._datasets(train_datasets)
         self.val_datasets = self._datasets(val_datasets)
         self.test_datasets = self._datasets(test_datasets)
         self.predict_datasets = self._datasets(predict_datasets)
+        self.collate_fn = collate_fn
         self.save_hyperparameters(
             ignore=[
                 "train_datasets",
                 "val_datasets",
                 "test_datasets",
                 "predict_datasets",
+                "collate_fn",
             ]
         )
 
@@ -55,6 +58,7 @@ class DataModule(LightningDataModule):
                 pin_memory=self.hparams.pin_memory,
                 drop_last=self.hparams.drop_last,
                 persistent_workers=self.hparams.num_workers > 0,
+                collate_fn=self.collate_fn,
             )
             for dataset in datasets
         ]

@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
-from pytorchlab.callbacks.image import ImageCallback
+from pytorchlab.callbacks.images import ImageCallback
 from pytorchlab.callbacks.loss import LossCallback
 from pytorchlab.datamodules.from_datasets import DataModule
 from pytorchlab.datasets.split import SplitDataset

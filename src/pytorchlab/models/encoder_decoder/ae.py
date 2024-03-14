@@ -4,7 +4,7 @@ from torch import Tensor, nn
 
 from pytorchlab.models.decoder.convtranspose import ConvTranspose2dBlock
 from pytorchlab.models.encoder.conv import Conv2dBlock
-from pytorchlab.type_hint import ModuleCallable
+from pytorchlab.typehints import ModuleCallable
 
 
 class AutoEncoder2dBlock(nn.Module):

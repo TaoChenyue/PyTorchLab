@@ -7,7 +7,7 @@ from torch import nn
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
-from pytorchlab.callbacks.image.cgan import CGANCallback
+from pytorchlab.callbacks.images.cgan import CGANCallback
 from pytorchlab.callbacks.loss import LossCallback
 from pytorchlab.datamodules.from_datasets import DataModule
 from pytorchlab.datasets.split import SplitDataset

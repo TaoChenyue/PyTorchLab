@@ -5,6 +5,8 @@ from typing import Any, Callable
 from PIL import Image
 from torch.utils.data import Dataset
 
+from pytorchlab.typehints import ImagePairItem
+
 
 class ImagePairDataset(Dataset):
     def __init__(
@@ -43,12 +45,15 @@ class ImagePairDataset(Dataset):
         return max(len(self.paths_A), len(self.paths_B))
 
     def __getitem__(self, index) -> Any:
-        img_A = self.paths_A[index % len(self.paths_A)]
-        img_A = Image.open(img_A)
-        img_B = self.paths_B[index % len(self.paths_B)]
-        img_B = Image.open(img_B)
+        path_A = self.paths_A[index % len(self.paths_A)]
+        img_A = Image.open(path_A)
+        path_B = self.paths_B[index % len(self.paths_B)]
+        img_B = Image.open(path_B)
         if self.transform is not None:
             img_A = self.transform(img_A)
         if self.target_transform is not None:
             img_B = self.target_transform(img_B)
-        return img_A, img_B
+        return ImagePairItem(
+            image1=img_A,
+            image2=img_B,
+        )

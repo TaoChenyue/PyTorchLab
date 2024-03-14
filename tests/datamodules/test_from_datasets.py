@@ -7,7 +7,7 @@ from torchvision.datasets import MNIST, FashionMNIST
 from pytorchlab.callbacks.loss import LossCallback
 from pytorchlab.datamodules.from_datasets import DataModule
 from pytorchlab.datasets.split import SplitDataset
-from pytorchlab.modules.lenet import LeNet5
+from pytorchlab.modules.classification.lenet import LeNet5
 
 
 def test_DataModule():

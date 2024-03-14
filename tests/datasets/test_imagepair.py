@@ -1,6 +1,6 @@
 from torchvision import transforms
 
-from pytorchlab.datasets.image_pair import ImagePairDataset
+from pytorchlab.datasets.imagepair import ImagePairDataset
 
 
 def main():

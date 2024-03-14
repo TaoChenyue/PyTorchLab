@@ -7,7 +7,7 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch import nn
 from torch.optim.lr_scheduler import ConstantLR
 
-from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
+from pytorchlab.typehints import LRSchedulerCallable, OptimizerCallable
 
 
 class GANomalyGeneratorLoss(nn.Module):

@@ -1,3 +1,4 @@
 from .anomaly import AnomalyDataset
-from .image_pair import ImagePairDataset
+from .classification import *
+from .imagepair import ImagePairDataset
 from .split import SplitDataset

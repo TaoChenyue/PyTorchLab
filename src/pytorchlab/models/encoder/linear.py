@@ -2,7 +2,7 @@ import torch
 from jsonargparse import lazy_instance
 from torch import nn
 
-from pytorchlab.type_hint import ModuleCallable
+from pytorchlab.typehints import ModuleCallable
 
 
 class LinearBlock(nn.Module):

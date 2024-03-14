@@ -5,7 +5,7 @@ from jsonargparse import lazy_instance
 from torch import nn
 
 from pytorchlab.models.encoder.conv import Conv2dBlock
-from pytorchlab.type_hint import ModuleCallable
+from pytorchlab.typehints import ModuleCallable
 
 
 class Upsample2dBlock(nn.Module):

@@ -1,12 +1,14 @@
-from typing import Any, Sequence
+from typing import Any
 
 import torch
 from jsonargparse import lazy_instance
 from lightning.pytorch import LightningModule
 from torch import Tensor, nn
 
+from pytorchlab.typehints import ImageClassifyItem, OutputDict, OutputsDict
 
-class LeNet5(LightningModule):
+
+class LeNet5Module(LightningModule):
     def __init__(
         self,
         channel: int = 1,
@@ -43,37 +45,44 @@ class LeNet5(LightningModule):
     def configure_optimizers(self) -> Any:
         return torch.optim.Adam(self.parameters(), lr=0.001)
 
-    def _get_output(self, batch: Sequence[Tensor]):
-        x = batch[0]
+    def _get_output(self, batch: ImageClassifyItem):
+        x = batch["image"]
         pred = self(x)
         return pred
 
-    def _get_loss(self, batch: Sequence[Tensor], pred: Tensor):
-        y = batch[1]
+    def _get_loss(self, batch: ImageClassifyItem, pred: Tensor):
+        y = batch["label"]
         loss = self.criterion(pred, y)
         return loss
 
-    def _step(self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0):
+    def _step(self, batch: ImageClassifyItem, batch_idx: int, dataloader_idx: int = 0):
         pred = self._get_output(batch)
         loss = self._get_loss(batch, pred)
-        return {"loss": loss, "outputs": {"vectors": [pred]}}
+        return OutputsDict(
+            loss=loss,
+            losses={"loss": loss},
+            inputs=OutputDict(
+                images={"image": batch["image"]}, labels={"label": batch["label"]}
+            ),
+            outputs=OutputDict(labels={"label": pred}),
+        )
 
     def training_step(
-        self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0
+        self, batch: ImageClassifyItem, batch_idx: int, dataloader_idx: int = 0
     ):
         return self._step(batch, batch_idx, dataloader_idx)
 
     def validation_step(
-        self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0
+        self, batch: ImageClassifyItem, batch_idx: int, dataloader_idx: int = 0
     ):
         return self._step(batch, batch_idx, dataloader_idx)
 
     def test_step(
-        self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0
+        self, batch: ImageClassifyItem, batch_idx: int, dataloader_idx: int = 0
     ):
         return self._step(batch, batch_idx, dataloader_idx)
 
     def predict_step(
-        self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0
+        self, batch: ImageClassifyItem, batch_idx: int, dataloader_idx: int = 0
     ) -> Any:
         return self._step(batch, batch_idx, dataloader_idx)

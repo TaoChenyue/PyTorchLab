@@ -6,7 +6,7 @@ from lightning.pytorch import LightningModule
 from torch import Tensor, nn
 from torch.optim.lr_scheduler import ConstantLR
 
-from pytorchlab.type_hint import LRSchedulerCallable, OptimizerCallable
+from pytorchlab.typehints import LRSchedulerCallable, OptimizerCallable
 
 
 class GANModule(LightningModule):

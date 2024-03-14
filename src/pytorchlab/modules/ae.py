@@ -6,7 +6,7 @@ from lightning.pytorch import LightningModule
 from torch import Tensor, nn
 
 from pytorchlab.models.encoder_decoder import AutoEncoder2d
-from pytorchlab.type_hint import ModuleCallable
+from pytorchlab.typehints import ModuleCallable
 
 
 class AutoEncoder2dModule(LightningModule):
