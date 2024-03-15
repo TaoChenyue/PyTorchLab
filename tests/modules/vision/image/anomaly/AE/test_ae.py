@@ -1,5 +1,5 @@
 import torch
-from lightning.pytorch import Trainer
+from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.loggers import TensorBoardLogger
 from torchvision import transforms
 
@@ -10,6 +10,7 @@ from pytorchlab.modules import AutoEncoder2dModule
 
 
 def main(root: str = "dataset", epochs: int = 10, limit_batches: int | None = None):
+    seed_everything(1234)
     model = AutoEncoder2dModule(
         in_channel=1,
         out_channel=1,
@@ -44,8 +45,8 @@ def main(root: str = "dataset", epochs: int = 10, limit_batches: int | None = No
         logger=[TensorBoardLogger("lightning_logs/test_ae", "mnist_anomaly")],
         callbacks=[
             LossCallback(),
-            ImageCallback(image_nums=4),
-            AnomalyCallback(),
+            ImageCallback(image_nums=64),
+            AnomalyCallback(image_nums=64),
         ],
         limit_train_batches=limit_batches,
         limit_val_batches=limit_batches,
@@ -62,4 +63,4 @@ def test_AutoEncoder2dModule():
 
 
 if __name__ == "__main__":
-    main()
+    main(epochs=100)
