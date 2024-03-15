@@ -1,2 +1,2 @@
-from .GANs import *
 from .AE import *
+from .GANs import *

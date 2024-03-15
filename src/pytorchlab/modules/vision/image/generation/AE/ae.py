@@ -1,12 +1,10 @@
-from typing import Sequence
-
 import torch
 from jsonargparse import lazy_instance
 from lightning.pytorch import LightningModule
-from torch import Tensor, nn
+from torch import nn
 
-from pytorchlab.models.encoder_decoder import AutoEncoder2d
-from pytorchlab.typehints import ModuleCallable
+from pytorchlab.models import AutoEncoder2d
+from pytorchlab.typehints import ImagePairItem, ModuleCallable, OutputDict, OutputsDict
 
 
 class AutoEncoder2dModule(LightningModule):
@@ -48,26 +46,30 @@ class AutoEncoder2dModule(LightningModule):
     def configure_optimizers(self):
         return torch.optim.Adam(self.model.parameters(), lr=1e-3)
 
-    def _step(self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0):
-        x, y = batch[0:2]
+    def _step(self, batch: ImagePairItem, batch_idx: int, dataloader_idx: int = 0):
+        x = batch["image1"]
+        y = batch["image2"]
         pred = self(x)
         loss = self.criterion(pred, y)
-        return {"loss": loss, "outputs": {"images": [pred]}}
+        return OutputsDict(
+            loss=loss,
+            losses={"loss": loss},
+            inputs=OutputDict(images={"image": x, "reconstructed": y}),
+            outputs=OutputDict(images={"reconstructed": pred}),
+        )
 
-    def training_step(self, batch: Sequence[Tensor], batch_idx: int):
+    def training_step(self, batch: ImagePairItem, batch_idx: int):
         return self._step(batch, batch_idx)
 
     def validation_step(
-        self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0
+        self, batch: ImagePairItem, batch_idx: int, dataloader_idx: int = 0
     ):
         return self._step(batch, batch_idx, dataloader_idx=dataloader_idx)
 
-    def test_step(
-        self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0
-    ):
+    def test_step(self, batch: ImagePairItem, batch_idx: int, dataloader_idx: int = 0):
         return self._step(batch, batch_idx, dataloader_idx=dataloader_idx)
 
     def predict_step(
-        self, batch: Sequence[Tensor], batch_idx: int, dataloader_idx: int = 0
+        self, batch: ImagePairItem, batch_idx: int, dataloader_idx: int = 0
     ):
         return self._step(batch, batch_idx, dataloader_idx=dataloader_idx)

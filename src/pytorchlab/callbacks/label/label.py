@@ -2,13 +2,13 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
+import torch
 from lightning import LightningModule, Trainer
 from lightning.pytorch.callbacks import Callback
 from torch import Tensor
 
 from pytorchlab.callbacks.utils.save_path import get_batch_save_path
 from pytorchlab.typehints import OutputsDict
-import torch
 
 __all__ = ["LabelNameCallback"]
 
@@ -41,7 +41,9 @@ class LabelNameCallback(Callback):
         )
         labels.update(
             {
-                f"output_{k}": [self.name_list[int(v)] for v in torch.argmax(v,dim=1)][: self.label_nums]
+                f"output_{k}": [self.name_list[int(v)] for v in torch.argmax(v, dim=1)][
+                    : self.label_nums
+                ]
                 for k, v in outputs.get("outputs", {}).get("labels", {}).items()
             }
         )
