@@ -46,11 +46,15 @@ class MetricsIQACallback(Callback):
     ) -> None:
         images = self.get_images(outputs)
         if self.metrics_dict is None:
-            self.metrics_dict = {k: self.get_metrics(k).to(pl_module.device) for k in images.keys()}
+            self.metrics_dict = {
+                k: self.get_metrics(k).to(pl_module.device) for k in images.keys()
+            }
         for k, v in images.items():
             self.metrics_dict[k].update(*v)
-            
-    def on_validation_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
+
+    def on_validation_epoch_end(
+        self, trainer: Trainer, pl_module: LightningModule
+    ) -> None:
         for k, v in self.metrics_dict.items():
             metrics = v.compute()
             pl_module.log_dict(
@@ -73,10 +77,12 @@ class MetricsIQACallback(Callback):
     ) -> None:
         images = self.get_images(outputs)
         if self.metrics_dict is None:
-            self.metrics_dict = {k: self.get_metrics(k).to(pl_module.device) for k in images.keys()}
+            self.metrics_dict = {
+                k: self.get_metrics(k).to(pl_module.device) for k in images.keys()
+            }
         for k, v in images.items():
             self.metrics_dict[k].update(*v)
-            
+
     def on_test_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         for k, v in self.metrics_dict.items():
             metrics = v.compute()

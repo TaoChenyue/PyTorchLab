@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 import torch
+import yaml
 from lightning import LightningModule, Trainer
 from lightning.pytorch.callbacks import Callback
 from torch import Tensor
@@ -20,7 +21,7 @@ class LabelNameCallback(Callback):
         on_epoch: bool = False,
         label_nums: int = 1,
         default_dir: str = "output",
-        name_list: list[str] = [],
+        name_list: list[str] | str = [],
         **kwargs,
     ) -> None:
         super().__init__()
@@ -30,6 +31,14 @@ class LabelNameCallback(Callback):
         self.default_dir = default_dir
         self.name_list = name_list
         self.kwargs = kwargs
+
+    def get_name_list(self, name_list: str | list[str]):
+        if isinstance(name_list, str):
+            yaml_file = Path(name_list)
+            name_list = yaml.load(open(yaml_file, "r"), Loader=yaml.FullLoader)
+            if not isinstance(name_list, list):
+                raise ValueError(f"{name_list} is not a list")
+        return name_list
 
     def get_labels(self, outputs: OutputsDict):
         labels = {}

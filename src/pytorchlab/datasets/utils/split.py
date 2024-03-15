@@ -9,7 +9,7 @@ __all__ = ["SplitDataset"]
 class SplitDataset(Dataset):
     def __init__(
         self,
-        dataset: Sequence,
+        dataset: Dataset,
         split: int | float = 0.2,
         seed: int | None = 42,
         train: bool = True,
