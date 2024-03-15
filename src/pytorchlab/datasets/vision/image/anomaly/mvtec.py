@@ -8,6 +8,8 @@ from torchvision.transforms import ToTensor
 
 from pytorchlab.typehints import ImageAnomalyItem
 
+__all__ = ["MvtecMask", "MvtecAnomalyDataset"]
+
 
 class MvtecMask:
     def __init__(self, transform: Callable | None = None) -> None:
@@ -27,22 +29,22 @@ class MvtecMask:
     def __call__(self, path: str):
         mask_path = self.get_mask_path(path)
         if not mask_path.exists():
-            raise FileNotFoundError(f"{mask_path} does not exist.")
-            # origin_image = Image.open(path).convert("L")
-            # mask_image = Image.new("L", origin_image.size, 0)
+            # raise FileNotFoundError(f"{mask_path} does not exist.")
+            origin_image = Image.open(path).convert("L")
+            mask_image = Image.new("L", origin_image.size, 0)
         else:
             mask_image = Image.open(mask_path).convert("L")
         mask_image = self.transform(mask_image)
         return mask_image
 
 
-class AnomalyDataset(Dataset):
+class MvtecAnomalyDataset(Dataset):
     def __init__(
         self,
         root: str,
         normal_names: list[str] = ["good"],
         transform: Callable | None = None,
-        get_mask: Callable | None = None,
+        get_mask: Callable | None = MvtecMask,
     ) -> None:
         super().__init__()
         self.dataset = ImageFolder(

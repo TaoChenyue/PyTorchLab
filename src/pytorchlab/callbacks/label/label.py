@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -29,7 +28,7 @@ class LabelNameCallback(Callback):
         self.on_epoch = on_epoch
         self.label_nums = label_nums
         self.default_dir = default_dir
-        self.name_list = name_list
+        self.name_list = self.get_name_list(name_list)
         self.kwargs = kwargs
 
     def get_name_list(self, name_list: str | list[str]):
@@ -60,7 +59,7 @@ class LabelNameCallback(Callback):
 
     def save_labels(self, labels: dict[str, Tensor], save_path: Path):
         for k, v in labels.items():
-            json.dump(v, open(save_path / f"{k}.json", "w", encoding="utf-8"))
+            yaml.dump(v, open(save_path / f"{k}.yaml", "w", encoding="utf-8"))
 
     def on_validation_batch_end(
         self,

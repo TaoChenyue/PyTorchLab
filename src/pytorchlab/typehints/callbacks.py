@@ -1,4 +1,4 @@
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from torch import Tensor
 
@@ -13,4 +13,4 @@ class OutputsDict(TypedDict):
     outputs: OutputDict
     loss: Tensor
     losses: dict[str, Tensor]
-    metrics: dict[str, Tensor | Any]
+    metrics: dict[str, Tensor]

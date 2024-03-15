@@ -13,7 +13,7 @@ class ImagePairItem(TypedDict):
     image2: Tensor
 
 
-class ImageAnomalyItem(TypedDict):
+class ImageAnomalyItem(ImageClassifyItem):
     image: Tensor
     # ground truth
     mask: Tensor
