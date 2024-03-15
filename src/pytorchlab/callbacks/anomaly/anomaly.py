@@ -25,6 +25,8 @@ class AnomalyCallback(Callback):
     ):
         """
         _summary_
+        threshold,min_score,max_score should be define in LightningModule
+        save_hyperparams() should be used
         OutputsDict:
             {
                 inputs:{
@@ -53,6 +55,7 @@ class AnomalyCallback(Callback):
         super().__init__()
         self.pr_curve = PrecisionRecallCurve(task="binary")
         self.threshold = threshold
+        self.threshold_suggest = threshold
         self.pixel_threshold = pixel_threshold
         self.min_score = None
         self.max_score = None
@@ -68,23 +71,30 @@ class AnomalyCallback(Callback):
         self.label_list = []
         self.pr_curve.reset()
 
+    def on_save_checkpoint(
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        checkpoint: torch.Dict[str, Any],
+    ) -> None:
+        checkpoint.update(
+            {
+                "threshold": self.threshold_suggest,
+                "min_score": self.min_score,
+                "max_score": self.max_score,
+            }
+        )
+        return super().on_save_checkpoint(trainer, pl_module, checkpoint)
+
     def _get_score(self, outputs: OutputsDict):
         return outputs.get("metrics", {}).get(self.score_name, None)
 
     def _get_label(self, outputs: OutputsDict):
         return outputs.get("inputs", {}).get("labels", {}).get(self.label_name, None)
 
-    def _load_paras(self, pl_module: LightningModule):
-        if self.threshold is None:
-            self.threshold = pl_module.hparams.get("threshold", 0.5)
-        if self.min_score is None:
-            self.min_score = pl_module.hparams.get("min_score", 0)
-        if self.max_score is None:
-            self.max_score = pl_module.hparams.get("max_score", 1)
-
     def _get_pr_threshold(self):
         self.max_score = max([torch.max(x) for x in self.score_list])
-        self.min_score = min([torch.max(x) for x in self.score_list])
+        self.min_score = min([torch.min(x) for x in self.score_list])
         self.score_list = [
             (score - self.min_score) / (self.max_score - self.min_score)
             for score in self.score_list
@@ -97,11 +107,18 @@ class AnomalyCallback(Callback):
             index = torch.argmax(f1_score)
         else:
             index = torch.min(torch.nonzero(f1_score >= self.threshold))
+        self.threshold_suggest = threshold[torch.argmax(f1_score)]
         return (
             pred[index],
             recall[index],
-            threshold[torch.argmax(f1_score)],
         )
+
+    def _load_paras(self, trainer: Trainer, pl_module: LightningModule):
+        if trainer.ckpt_path is not None:
+            checkpoint = torch.load(trainer.ckpt_path, map_location=pl_module.device)
+            self.threshold_suggest = checkpoint.get("threshold", 0.5)
+            self.min_score = checkpoint.get("min_score", 0)
+            self.max_score = checkpoint.get("max_score", 1)
 
     def _get_heatmap(self, outputs: OutputsDict):
         image = outputs.get("inputs", {}).get("images", {}).get(self.image_name, None)
@@ -142,14 +159,7 @@ class AnomalyCallback(Callback):
         if len(self.score_list) == 0:
             return
 
-        pred, recall, threshold = self._get_pr_threshold()
-        pl_module.hparams.update(
-            {
-                "threshold": threshold,
-                "min_score": self.min_score,
-                "max_score": self.max_score,
-            }
-        )
+        pred, recall = self._get_pr_threshold()
         pl_module.log_dict(
             {
                 "precision": pred,
@@ -160,7 +170,7 @@ class AnomalyCallback(Callback):
 
     def on_test_epoch_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         self.reset_metrics()
-        self._load_paras(pl_module)
+        self._load_paras(trainer, pl_module)
 
     def on_test_batch_end(
         self,
@@ -181,7 +191,7 @@ class AnomalyCallback(Callback):
     def on_test_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
         if len(self.score_list) == 0:
             return
-        pred, recall, threshold = self._get_pr_threshold()
+        pred, recall = self._get_pr_threshold()
         pl_module.log_dict(
             {
                 "precision": pred,
@@ -193,7 +203,7 @@ class AnomalyCallback(Callback):
     def on_predict_epoch_start(
         self, trainer: Trainer, pl_module: LightningModule
     ) -> None:
-        self._load_paras(pl_module)
+        self._load_paras(trainer, pl_module)
 
     def on_predict_batch_end(
         self,
@@ -206,14 +216,21 @@ class AnomalyCallback(Callback):
     ) -> None:
         score = self._get_score(outputs)
         score = (score - self.min_score) / (self.max_score - self.min_score)
-        label = (score >= self.threshold).int()
+        threshold = self.threshold if self.threshold else self.threshold_suggest
         heatmap = self._get_heatmap(outputs)
         save_path = get_batch_save_path(trainer, pl_module, batch_idx, dataloader_idx)
         save_image(
             make_grid(heatmap[: self.image_nums], **self.kwargs),
             save_path / "heatmap.png",
         )
-        label = [
-            "normal" if label == 0 else "abnormal" for label in label[: self.image_nums]
+        input_label = self._get_label(outputs)
+        input_label = [
+            "abnormal" if label == 1 else "normal"
+            for label in input_label[: self.image_nums]
         ]
-        yaml.dump(label, open(save_path / "label.yaml", "w"))
+        yaml.dump(input_label, open(save_path / "input_label.yaml", "w"))
+        label = [
+            "abnormal" if score >= threshold else "normal"
+            for score in score[: self.image_nums]
+        ]
+        yaml.dump(label, open(save_path / "output_label.yaml", "w"))

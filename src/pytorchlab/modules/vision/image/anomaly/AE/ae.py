@@ -29,7 +29,6 @@ class AutoEncoder2dModule(LightningModule):
         criterion: nn.Module = lazy_instance(nn.MSELoss),
     ):
         super().__init__()
-
         self.model = AutoEncoder2d(
             in_channels=in_channel,
             out_channels=out_channel,

@@ -28,9 +28,9 @@ def main(root: str = "dataset", epochs: int = 10, limit_batches: int | None = No
     _test_dataset = MNISTAnomalyDataset(
         root=root, train=False, download=True, transform=transform
     )
-    val_dataset = SplitDataset(_test_dataset, train=False)
-    test_dataset = SplitDataset(_test_dataset)
-    predict_dataset = test_dataset
+    val_dataset = _test_dataset
+    test_dataset = _test_dataset
+    predict_dataset = SplitDataset(_test_dataset, train=False)
     datamodule = DataModule(
         train_datasets=train_dataset,
         val_datasets=val_dataset,
@@ -63,4 +63,4 @@ def test_AutoEncoder2dModule():
 
 
 if __name__ == "__main__":
-    main(epochs=100)
+    main(epochs=10)
