@@ -3,7 +3,7 @@ from lightning.pytorch import LightningModule, Trainer
 from lightning.pytorch.callbacks import Callback
 from torchvision.utils import make_grid, save_image
 
-from pytorchlab.callbacks.utils import get_save_dir
+from pytorchlab.callbacks.utils.save_path import get_save_dir
 
 __all__ = ["CGANCallback"]
 

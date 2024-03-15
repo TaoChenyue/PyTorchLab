@@ -1,5 +1,7 @@
 import torch
 
+__all__ = ["PepperSaltNoise", "GaussianNoise"]
+
 
 class PepperSaltNoise(object):
     def __init__(

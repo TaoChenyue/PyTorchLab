@@ -20,6 +20,20 @@ class DataModule(LightningDataModule):
         drop_last: bool = False,
         collate_fn: Callable | None = None,
     ) -> None:
+        """
+        _summary_
+
+        Args:
+            train_datasets (Dataset | Iterable[Dataset] | None, optional): _description_. Defaults to None.
+            val_datasets (Dataset | Iterable[Dataset] | None, optional): _description_. Defaults to None.
+            test_datasets (Dataset | Iterable[Dataset] | None, optional): _description_. Defaults to None.
+            predict_datasets (Dataset | Iterable[Dataset] | None, optional): _description_. Defaults to None.
+            batch_size (int, optional): _description_. Defaults to 1.
+            num_workers (int, optional): _description_. Defaults to 4.
+            pin_memory (bool, optional): _description_. Defaults to True.
+            drop_last (bool, optional): _description_. Defaults to False.
+            collate_fn (Callable | None, optional): _description_. Defaults to None.
+        """
         super().__init__()
         self.train_datasets = self._datasets(train_datasets)
         self.val_datasets = self._datasets(val_datasets)
