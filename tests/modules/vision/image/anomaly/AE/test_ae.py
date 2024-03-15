@@ -44,7 +44,7 @@ def main(root: str = "dataset", epochs: int = 10, limit_batches: int | None = No
         logger=[TensorBoardLogger("lightning_logs/test_ae", "mnist_anomaly")],
         callbacks=[
             LossCallback(),
-            ImageCallback(),
+            ImageCallback(image_nums=4),
             AnomalyCallback(),
         ],
         limit_train_batches=limit_batches,
@@ -55,6 +55,10 @@ def main(root: str = "dataset", epochs: int = 10, limit_batches: int | None = No
     trainer.fit(model, datamodule)
     trainer.test(model, datamodule=datamodule)
     trainer.predict(model, datamodule=datamodule)
+
+
+def test_AutoEncoder2dModule():
+    main(epochs=1, limit_batches=1)
 
 
 if __name__ == "__main__":
