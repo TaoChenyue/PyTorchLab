@@ -30,7 +30,7 @@ class AutoEncoder2dModule(LightningModule):
     ):
         """
         AutoEncoder2dModule
-        
+
         OutputsDict(
             loss=loss,
             losses={"loss": loss},

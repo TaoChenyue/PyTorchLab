@@ -1,1 +1,1 @@
-from .noise import *
+from .image import *

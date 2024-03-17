@@ -1,16 +1,12 @@
+from pathlib import Path
+
 import pytest
+import torch
+from PIL import Image
+from torchvision import transforms
+from torchvision.utils import save_image
 
-try:
-    from pathlib import Path
-
-    import torch
-    from PIL import Image
-    from torchvision import transforms
-    from torchvision.utils import save_image
-
-    from pytorchlab.transforms import GaussianNoise, PepperSaltNoise
-except Exception as e:
-    print(e)
+from pytorchlab.transforms import GaussianNoise, PepperSaltNoise
 
 
 @pytest.fixture
