@@ -3,7 +3,7 @@ from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.loggers import TensorBoardLogger
 from torchvision import transforms
 
-from pytorchlab.callbacks import AnomalyCallback, ImageCallback, LossCallback
+from pytorchlab.callbacks import ImageAnomalyCallback, ImageCallback, LossCallback
 from pytorchlab.datamodules import DataModule
 from pytorchlab.datasets import MNISTAnomalyDataset, SplitDataset
 from pytorchlab.modules import AutoEncoder2dModule
@@ -45,8 +45,8 @@ def main(root: str = "dataset", epochs: int = 10, limit_batches: int | None = No
         logger=[TensorBoardLogger("lightning_logs/test_ae", "mnist_anomaly")],
         callbacks=[
             LossCallback(),
-            ImageCallback(image_nums=64),
-            AnomalyCallback(image_nums=64),
+            ImageCallback(input_names=["image"], output_names=["image"]),
+            ImageAnomalyCallback(),
         ],
         limit_train_batches=limit_batches,
         limit_val_batches=limit_batches,

@@ -21,6 +21,7 @@ __all__ = ["MetricsClassificationCallback"]
 class MetricsClassificationCallback(Callback):
     def __init__(
         self,
+        name: str,
         num_classes: int = 10,
     ):
         """
@@ -30,8 +31,9 @@ class MetricsClassificationCallback(Callback):
             num_classes (int, optional): number of classes. Defaults to 10.
         """
         super().__init__()
+        self.name = name
         self.num_classes = num_classes
-        self.metrics_dict: dict[str, MetricCollection] | None = None
+        self.metrics_dict = self.get_metrics(name)
 
     def get_metrics(self, name: str):
         return MetricCollection(
@@ -56,12 +58,16 @@ class MetricsClassificationCallback(Callback):
         )
 
     def get_labels(self, outputs: OutputsDict):
-        y = outputs.get("inputs", {}).get("labels", {})
-        pred = outputs.get("outputs", {}).get("labels", {})
-        return {k: (pred[k], y[k]) for k in pred.keys() if k in y.keys()}
+        y = outputs.get("inputs", {}).get("labels", {}).get(self.name, None)
+        pred = outputs.get("outputs", {}).get("labels", {}).get(self.name, None)
+        if y is None or pred is None:
+            raise ValueError(
+                f"{self.name} not found in labels dict of inputs and outputs"
+            )
+        return y, pred
 
     def on_validation_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
-        self.metrics_dict = None
+        self.metrics_dict.reset()
 
     def on_validation_batch_end(
         self,
@@ -72,27 +78,19 @@ class MetricsClassificationCallback(Callback):
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
-        labels = self.get_labels(outputs)
-        if self.metrics_dict is None:
-            self.metrics_dict = {
-                k: self.get_metrics(k).to(pl_module.device) for k in labels.keys()
-            }
-        for k, v in labels.items():
-            self.metrics_dict[k].update(*v)
+        self.metrics_dict.update(*self.get_labels(outputs))
 
     def on_validation_epoch_end(
         self, trainer: Trainer, pl_module: LightningModule
     ) -> None:
-        for k, v in self.metrics_dict.items():
-            metrics = v.compute()
-            pl_module.log_dict(
-                metrics,
-                sync_dist=True,
-            )
-            v.reset()
+        metrics = self.metrics_dict.compute()
+        pl_module.log_dict(
+            metrics,
+            sync_dist=True,
+        )
 
     def on_test_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
-        self.metrics_dict = None
+        self.metrics_dict.reset()
 
     def on_test_batch_end(
         self,
@@ -103,19 +101,11 @@ class MetricsClassificationCallback(Callback):
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
-        labels = self.get_labels(outputs)
-        if self.metrics_dict is None:
-            self.metrics_dict = {
-                k: self.get_metrics(k).to(pl_module.device) for k in labels.keys()
-            }
-        for k, v in labels.items():
-            self.metrics_dict[k].update(*v)
+        self.metrics_dict.update(*self.get_labels(outputs))
 
     def on_test_epoch_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
-        for k, v in self.metrics_dict.items():
-            metrics = v.compute()
-            pl_module.log_dict(
-                metrics,
-                sync_dist=True,
-            )
-            v.reset()
+        metrics = self.metrics_dict.compute()
+        pl_module.log_dict(
+            metrics,
+            sync_dist=True,
+        )

@@ -1,1 +1,1 @@
-from .anomaly import AnomalyCallback
+from .image import ImageAnomalyCallback

@@ -44,7 +44,7 @@ class MvtecAnomalyDataset(Dataset):
         root: str,
         normal_names: list[str] = ["good"],
         transform: Callable | None = None,
-        get_mask: Callable | None = MvtecMask,
+        get_mask: Callable | None = None,
     ) -> None:
         super().__init__()
         self.dataset = ImageFolder(
@@ -55,7 +55,7 @@ class MvtecAnomalyDataset(Dataset):
         self.normal_names = normal_names
 
     def __len__(self):
-        return len(self.paths)
+        return len(self.dataset)
 
     def __getitem__(self, index) -> ImageAnomalyItem:
         image, label = self.dataset[index]
@@ -63,9 +63,7 @@ class MvtecAnomalyDataset(Dataset):
         name = self.dataset.classes[label]
         item = ImageAnomalyItem(
             image=image,
-            image_path=image_path,
             label=0 if name in self.normal_names else 1,
-            name=name,
         )
         if self.get_mask is not None:
             mask = self.get_mask(image_path)

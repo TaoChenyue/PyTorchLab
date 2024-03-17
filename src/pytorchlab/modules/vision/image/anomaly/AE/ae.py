@@ -28,6 +28,38 @@ class AutoEncoder2dModule(LightningModule):
         up_activation: nn.Module = lazy_instance(nn.Tanh),
         criterion: nn.Module = lazy_instance(nn.MSELoss),
     ):
+        """
+        AutoEncoder2dModule
+        
+        OutputsDict(
+            loss=loss,
+            losses={"loss": loss},
+            inputs=OutputDict(
+                images={"image": x},
+                labels={"label": batch["label"]},
+            ),
+            outputs=OutputDict(
+                images={"image": pred},
+                metrics={
+                    "score": anomaly_score,
+                },
+            ),
+        )
+
+        Args:
+            in_channel (int): _description_
+            out_channel (int): _description_
+            kernel_size (int, optional): _description_. Defaults to 4.
+            stride (int, optional): _description_. Defaults to 2.
+            padding (int, optional): _description_. Defaults to 1.
+            nf (int, optional): _description_. Defaults to 64.
+            depth (int, optional): _description_. Defaults to 8.
+            hold_depth (int, optional): _description_. Defaults to 3.
+            norm (ModuleCallable, optional): _description_. Defaults to nn.Identity.
+            down_activation (nn.Module, optional): _description_. Defaults to lazy_instance(nn.ReLU, inplace=True).
+            up_activation (nn.Module, optional): _description_. Defaults to lazy_instance(nn.Tanh).
+            criterion (nn.Module, optional): _description_. Defaults to lazy_instance(nn.MSELoss).
+        """
         super().__init__()
         self.model = AutoEncoder2d(
             in_channels=in_channel,
@@ -54,20 +86,23 @@ class AutoEncoder2dModule(LightningModule):
         x = batch["image"]
         pred = self(x)
         loss = self.criterion(pred, x)
+        heatmap = x - pred
         anomaly_score = torch.mean(
-            torch.pow(x - pred, 2), dim=list(range(1, len(x.shape)))
+            torch.pow(heatmap, 2), dim=list(range(1, len(x.shape)))
         )
         return OutputsDict(
             loss=loss,
             losses={"loss": loss},
             inputs=OutputDict(
-                images={"image": x, "reconstructed": x},
+                images={"image": x},
                 labels={"label": batch["label"]},
             ),
-            outputs=OutputDict(images={"reconstructed": pred}),
-            metrics={
-                "anomaly_score": anomaly_score,
-            },
+            outputs=OutputDict(
+                images={"image": pred},
+                metrics={
+                    "score": anomaly_score,
+                },
+            ),
         )
 
     def training_step(self, batch: ImageAnomalyItem, batch_idx: int):
