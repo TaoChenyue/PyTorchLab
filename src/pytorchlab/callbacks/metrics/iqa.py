@@ -36,6 +36,7 @@ class MetricsIQACallback(Callback):
         return input_images, output_images
 
     def on_validation_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
+        self.metrics_dict.to(pl_module.device)
         self.metrics_dict.reset()
 
     def on_validation_batch_end(
@@ -59,6 +60,7 @@ class MetricsIQACallback(Callback):
         )
 
     def on_test_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
+        self.metrics_dict.to(pl_module.device)
         self.metrics_dict.reset()
 
     def on_test_batch_end(

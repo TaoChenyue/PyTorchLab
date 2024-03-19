@@ -4,6 +4,8 @@ from torch import nn
 
 from pytorchlab.typehints import ModuleCallable
 
+__all__ = ["LinearBlock"]
+
 
 class LinearBlock(nn.Module):
     def __init__(

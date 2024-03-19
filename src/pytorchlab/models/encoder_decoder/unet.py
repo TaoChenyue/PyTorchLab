@@ -32,7 +32,7 @@ class UNetSkipConnection2dBlock(nn.Module):
         )
         self.submodule = submodule
         self.up_block = ConvTranspose2dBlock(
-            in_channels=channel,
+            in_channels=channel if isinstance(submodule, nn.Identity) else channel * 2,
             out_channels=last_channel,
             kernel_size=kernel_size,
             stride=stride,
@@ -88,7 +88,7 @@ class UNet2d(nn.Module):
                 norm=norm,
                 down_activation=down_activation,
                 up_activation=down_activation,
-                sub_module=unetblock,
+                submodule=unetblock,
             )
         for i in range(hold_depth):
             unetblock = UNetSkipConnection2dBlock(
@@ -100,13 +100,13 @@ class UNet2d(nn.Module):
                 norm=norm,
                 down_activation=down_activation,
                 up_activation=down_activation,
-                sub_module=unetblock,
+                submodule=unetblock,
             )
         self.model = nn.Sequential(
             nn.Conv2d(in_channel, nf, kernel_size=3, padding=1),
             down_activation,
             unetblock,
-            nn.Conv2d(nf, out_channel, kernel_size=3, padding=1),
+            nn.Conv2d(nf * 2, out_channel, kernel_size=3, padding=1),
             up_activation,
         )
 

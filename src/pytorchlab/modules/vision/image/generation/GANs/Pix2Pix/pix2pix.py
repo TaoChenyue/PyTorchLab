@@ -73,6 +73,32 @@ class Pix2PixModule(LightningModule):
         lr_g: LRSchedulerCallable = ConstantLR,
         lr_d: LRSchedulerCallable = ConstantLR,
     ):
+        """
+        _summary_
+
+        OutputsDict(
+            losses={"g_loss": g_loss, "d_loss": d_loss},
+            inputs=OutputDict(
+                images={
+                    "image": batch["image1"],
+                    "reconstruct": batch["image2"],
+                }
+            ),
+            outputs=OutputDict(
+                images={"reconstruct": fake_B},
+            ),
+        )
+
+        Args:
+            generator (nn.Module): _description_
+            discriminator (nn.Module): _description_
+            criterion_generator (Pix2PixGeneratorLoss, optional): _description_. Defaults to lazy_instance(Pix2PixGeneratorLoss).
+            criterion_discriminator (Pix2PixDiscriminatorLoss, optional): _description_. Defaults to lazy_instance( Pix2PixDiscriminatorLoss ).
+            optimizer_g (OptimizerCallable, optional): _description_. Defaults to torch.optim.Adam.
+            optimizer_d (OptimizerCallable, optional): _description_. Defaults to torch.optim.Adam.
+            lr_g (LRSchedulerCallable, optional): _description_. Defaults to ConstantLR.
+            lr_d (LRSchedulerCallable, optional): _description_. Defaults to ConstantLR.
+        """
         super().__init__()
         # do not optimize model automatically
         self.automatic_optimization = False
@@ -126,7 +152,8 @@ class Pix2PixModule(LightningModule):
         return OutputsDict(losses={"g_loss": g_loss, "d_loss": d_loss})
 
     def generator_step(self, batch: ImagePairItem):
-        real_A, real_B = batch[0:2]
+        real_A = batch["image1"]
+        real_B = batch["image2"]
         fake_B = self.generator(real_A)
         output: torch.Tensor = self.discriminator(torch.cat((real_A, fake_B), dim=1))
         g_loss = self.criterion_generator(output, fake_B, real_B)
@@ -134,7 +161,8 @@ class Pix2PixModule(LightningModule):
         return g_loss, fake_B
 
     def discriminator_step(self, batch: ImagePairItem):
-        real_A, real_B = batch[0:2]
+        real_A = batch["image1"]
+        real_B = batch["image2"]
         fake_B = self.generator(real_A)
         # real loss
         output_real: torch.Tensor = self.discriminator(

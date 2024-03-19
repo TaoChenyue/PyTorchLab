@@ -1,3 +1,3 @@
-from .conv import Conv2dBlock
-from .linear import LinearBlock
-from .residual import ResidualBlock
+from .conv import *
+from .linear import *
+from .residual import *

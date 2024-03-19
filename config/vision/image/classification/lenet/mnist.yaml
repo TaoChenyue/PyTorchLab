@@ -22,33 +22,32 @@ trainer:
       flush_secs: 120
       filename_suffix: ''
   callbacks:
-  - class_path: pytorchlab.callbacks.LossCallback
+  - class_path: pytorchlab.LossCallback
     init_args:
       prog_bar: true
       on_epoch: true
       on_step: false
       sync_dist: true
-  - class_path: pytorchlab.callbacks.ImageCallback
+  - class_path: pytorchlab.ImageCallback
     init_args:
       batch_idx: 0
-      on_epoch: false
-      image_nums: 8
-      default_dir: output
+      input_names: [image]
+      output_names: []
       nrow: 8
       padding: 2
       normalize: false
       value_range: null
       scale_each: false
       pad_value: 0.0
-  - class_path: pytorchlab.callbacks.LabelNameCallback
+  - class_path: pytorchlab.LabelNameCallback
     init_args:
       batch_idx: 0
-      on_epoch: false
-      label_nums: 8
-      default_dir: output
+      input_names: [label]
+      output_names: [label]
       name_list: config/_meta/mnist_classes.yaml
-  - class_path: pytorchlab.callbacks.MetricsClassificationCallback
+  - class_path: pytorchlab.MetricsClassificationCallback
     init_args:
+      name: label
       num_classes: 10
   fast_dev_run: false
   max_epochs: 10
@@ -84,71 +83,75 @@ trainer:
   default_root_dir: null
 ckpt_path: null
 data:
-  class_path: pytorchlab.datamodules.DataModule
+  class_path: pytorchlab.DataModule
   init_args:
     train_datasets:
-      class_path: pytorchlab.datasets.SplitDataset
+      class_path: pytorchlab.SplitDataset
       init_args:
         dataset:
-          class_path: pytorchlab.datasets.MNISTDataset
+          class_path: pytorchlab.MNISTDataset
           init_args:
             root: dataset
             train: true
-            transform: torchvision.transforms.ToTensor
+            transform:
+              class_path: torchvision.transforms.ToTensor
             target_transform: null
             download: true
         split: 0.2
         seed: 42
         train: true
     val_datasets:
-      class_path: pytorchlab.datasets.SplitDataset
+      class_path: pytorchlab.SplitDataset
       init_args:
         dataset:
-          class_path: pytorchlab.datasets.MNISTDataset
+          class_path: pytorchlab.MNISTDataset
           init_args:
             root: dataset
             train: true
-            transform: torchvision.transforms.ToTensor
+            transform:
+              class_path: torchvision.transforms.ToTensor
             target_transform: null
             download: true
         split: 0.2
         seed: 42
         train: false
     test_datasets:
-      class_path: pytorchlab.datasets.SplitDataset
+      class_path: pytorchlab.SplitDataset
       init_args:
         dataset:
-          class_path: pytorchlab.datasets.MNISTDataset
+          class_path: pytorchlab.MNISTDataset
           init_args:
             root: dataset
             train: false
-            transform: torchvision.transforms.ToTensor
+            transform:
+              class_path: torchvision.transforms.ToTensor
             target_transform: null
             download: true
         split: 0.2
         seed: 42
         train: true
     predict_datasets:
-      class_path: pytorchlab.datasets.SplitDataset
+      class_path: pytorchlab.SplitDataset
       init_args:
         dataset:
-          class_path: pytorchlab.datasets.MNISTDataset
+          class_path: pytorchlab.MNISTDataset
           init_args:
             root: dataset
             train: false
-            transform: torchvision.transforms.ToTensor
+            transform:
+              class_path: torchvision.transforms.ToTensor
             target_transform: null
             download: true
         split: 0.2
         seed: 42
         train: false
-    batch_size: 8
-    num_workers: 4
+    batch_size: 64
+    num_workers: 20
     pin_memory: true
     drop_last: false
     collate_fn: null
 model:
-  class_path: pytorchlab.modules.LeNet5Module
+  class_path: pytorchlab.LeNet5Module
   init_args:
     channel: 1
     height: 28

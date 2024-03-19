@@ -3,6 +3,8 @@ from torch import nn
 
 from pytorchlab.typehints import ModuleCallable
 
+__all__ = ["ResidualBlock"]
+
 
 class ResidualBlock(nn.Module):
     def __init__(
