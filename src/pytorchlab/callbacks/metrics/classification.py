@@ -64,9 +64,10 @@ class MetricsClassificationCallback(Callback):
             raise ValueError(
                 f"{self.name} not found in labels dict of inputs and outputs"
             )
-        return y, pred
+        return pred, y
 
     def on_validation_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
+        self.metrics_dict.to(pl_module.device)
         self.metrics_dict.reset()
 
     def on_validation_batch_end(
@@ -90,6 +91,7 @@ class MetricsClassificationCallback(Callback):
         )
 
     def on_test_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
+        self.metrics_dict.to(pl_module.device)
         self.metrics_dict.reset()
 
     def on_test_batch_end(

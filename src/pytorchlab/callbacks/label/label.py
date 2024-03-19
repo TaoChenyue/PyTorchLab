@@ -12,17 +12,24 @@ from pytorchlab.typehints import OutputsDict
 __all__ = ["LabelNameCallback"]
 
 
-class LabelCallback(Callback):
+class LabelNameCallback(Callback):
     def __init__(
         self,
         batch_idx: int = 0,
         input_names: list[str] = [],
         output_names: list[str] = [],
+        name_list: list[str] | str = [],
     ) -> None:
         super().__init__()
         self.batch_idx = batch_idx
         self.input_names = input_names
         self.output_names = output_names
+        self.name_list = self.get_name_list(name_list)
+
+    def get_name_list(self, name_list: list[str] | str):
+        if isinstance(name_list, str):
+            name_list = yaml.load(open(name_list, "r"), Loader=yaml.FullLoader)
+        return name_list
 
     def get_labels(self, outputs: OutputsDict):
         labels = {}
@@ -44,7 +51,12 @@ class LabelCallback(Callback):
 
     def save_labels(self, labels: dict[str, Tensor], save_path: Path):
         for k, v in labels.items():
-            yaml.dump(v, open(save_path / f"{k}.yaml", "w", encoding="utf-8"))
+            if v.ndim > 1:
+                v = v.argmax(dim=-1)
+            yaml.dump(
+                [self.name_list[v] for v in v.tolist()],
+                open(save_path / f"{k}.yaml", "w", encoding="utf-8"),
+            )
 
     def on_validation_batch_end(
         self,

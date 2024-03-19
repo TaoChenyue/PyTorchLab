@@ -1,1 +1,1 @@
-from .label import LabelCallback
+from .label import *

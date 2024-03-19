@@ -1,4 +1,4 @@
-from typing import Any, Sequence
+from typing import Any
 
 import torch
 from jsonargparse import lazy_instance
@@ -7,29 +7,16 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from torch import nn
 from torch.optim.lr_scheduler import ConstantLR
 
-from pytorchlab.typehints import LRSchedulerCallable, OptimizerCallable
+from pytorchlab.typehints import (
+    ImagePairItem,
+    LRSchedulerCallable,
+    OptimizerCallable,
+    OutputDict,
+    OutputsDict,
+)
 
 
 class Pix2PixGeneratorLoss(nn.Module):
-    def forward(
-        self,
-        fake_output: torch.Tensor,
-        fake_images: torch.Tensor,
-        target_images: torch.Tensor,
-    ) -> torch.Tensor:
-        raise NotImplementedError
-
-
-class Pix2PixDiscriminatorLoss(nn.Module):
-    def forward(
-        self,
-        fake_output: torch.Tensor,
-        real_output: torch.Tensor,
-    ):
-        raise NotImplementedError
-
-
-class GeneratorLoss(Pix2PixGeneratorLoss):
     def __init__(
         self,
         criterion_gan: nn.Module = lazy_instance(torch.nn.MSELoss),
@@ -55,7 +42,7 @@ class GeneratorLoss(Pix2PixGeneratorLoss):
         return self.lambda_gan * loss_gan + self.lambda_image * loss_image
 
 
-class DiscriminatorLoss(Pix2PixDiscriminatorLoss):
+class Pix2PixDiscriminatorLoss(nn.Module):
     def __init__(self, criterion: nn.Module = lazy_instance(torch.nn.MSELoss)):
         super().__init__()
         self.criterion = criterion
@@ -77,9 +64,9 @@ class Pix2PixModule(LightningModule):
         self,
         generator: nn.Module,
         discriminator: nn.Module,
-        criterion_generator: Pix2PixGeneratorLoss = lazy_instance(GeneratorLoss),
+        criterion_generator: Pix2PixGeneratorLoss = lazy_instance(Pix2PixGeneratorLoss),
         criterion_discriminator: Pix2PixDiscriminatorLoss = lazy_instance(
-            DiscriminatorLoss
+            Pix2PixDiscriminatorLoss
         ),
         optimizer_g: OptimizerCallable = torch.optim.Adam,
         optimizer_d: OptimizerCallable = torch.optim.Adam,
@@ -113,9 +100,7 @@ class Pix2PixModule(LightningModule):
             {"optimizer": optimizer_d, "lr_scheduler": lr_d},
         ]
 
-    def training_step(
-        self, batch: Sequence[torch.Tensor], batch_idx: int
-    ) -> STEP_OUTPUT:
+    def training_step(self, batch: ImagePairItem, batch_idx: int) -> STEP_OUTPUT:
         # zero grad generator optimizer
         optimizer_g: torch.optim.Optimizer = self.optimizers()[0]
         optimizer_g.zero_grad()
@@ -138,9 +123,9 @@ class Pix2PixModule(LightningModule):
         lr_d = self.lr_schedulers()[1]
         lr_d.step()
 
-        return {"g_loss": g_loss, "d_loss": d_loss}
+        return OutputsDict(losses={"g_loss": g_loss, "d_loss": d_loss})
 
-    def generator_step(self, batch: Sequence[torch.Tensor]):
+    def generator_step(self, batch: ImagePairItem):
         real_A, real_B = batch[0:2]
         fake_B = self.generator(real_A)
         output: torch.Tensor = self.discriminator(torch.cat((real_A, fake_B), dim=1))
@@ -148,7 +133,7 @@ class Pix2PixModule(LightningModule):
 
         return g_loss, fake_B
 
-    def discriminator_step(self, batch: Sequence[torch.Tensor]):
+    def discriminator_step(self, batch: ImagePairItem):
         real_A, real_B = batch[0:2]
         fake_B = self.generator(real_A)
         # real loss
@@ -163,17 +148,28 @@ class Pix2PixModule(LightningModule):
 
     def _step(
         self,
-        batch: Sequence[torch.Tensor],
+        batch: ImagePairItem,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> Any:
         g_loss, fake_B = self.generator_step(batch)
         d_loss = self.discriminator_step(batch)
-        return {"g_loss": g_loss, "d_loss": d_loss, "outputs": {"images": [fake_B]}}
+        return OutputsDict(
+            losses={"g_loss": g_loss, "d_loss": d_loss},
+            inputs=OutputDict(
+                images={
+                    "image": batch["image1"],
+                    "reconstruct": batch["image2"],
+                }
+            ),
+            outputs=OutputDict(
+                images={"reconstruct": fake_B},
+            ),
+        )
 
     def validation_step(
         self,
-        batch: Sequence[torch.Tensor],
+        batch: ImagePairItem,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> Any:
@@ -181,7 +177,7 @@ class Pix2PixModule(LightningModule):
 
     def test_step(
         self,
-        batch: Sequence[torch.Tensor],
+        batch: ImagePairItem,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> Any:
@@ -189,7 +185,7 @@ class Pix2PixModule(LightningModule):
 
     def predict_step(
         self,
-        batch: Sequence[torch.Tensor],
+        batch: ImagePairItem,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> Any:

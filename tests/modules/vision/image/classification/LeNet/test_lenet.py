@@ -43,13 +43,15 @@ def main(
         devices=int(torch.cuda.is_available()),
         callbacks=[
             LossCallback(),
-            ImageCallback(image_nums=8, nrow=8),
+            ImageCallback(input_names=["image"], nrow=8),
             LabelNameCallback(
-                name_list=mnist_train_dataset.dataset.classes, label_nums=8
+                name_list=mnist_train_dataset.dataset.classes,
+                input_names=["label"],
+                output_names=["label"],
             ),
-            MetricsClassificationCallback(),
+            MetricsClassificationCallback(name="label"),
         ],
-        logger=[TensorBoardLogger("lightning_logs/test_lenet", "mnist")],
+        logger=[TensorBoardLogger("logs/lenet", "mnist")],
         limit_train_batches=limit_batches,
         limit_val_batches=limit_batches,
         limit_predict_batches=limit_batches,

@@ -19,6 +19,26 @@ class LeNet5Module(LightningModule):
         num_classes: int = 10,
         criterion: nn.Module = lazy_instance(nn.CrossEntropyLoss),
     ):
+        """
+        _summary_
+
+        OutputsDict(
+            loss=loss,
+            losses={"loss": loss},
+            inputs=OutputDict(
+                images={"image": batch["image"]},
+                labels={"label": batch["label"]},
+            ),
+            outputs=OutputDict(labels={"label": pred}),
+        )
+
+        Args:
+            channel (int, optional): _description_. Defaults to 1.
+            height (int, optional): _description_. Defaults to 28.
+            width (int, optional): _description_. Defaults to 28.
+            num_classes (int, optional): _description_. Defaults to 10.
+            criterion (nn.Module, optional): _description_. Defaults to lazy_instance(nn.CrossEntropyLoss).
+        """
         super().__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(channel, 6, 5, padding=2),  # (B,6,H,W)
@@ -64,7 +84,8 @@ class LeNet5Module(LightningModule):
             loss=loss,
             losses={"loss": loss},
             inputs=OutputDict(
-                images={"image": batch["image"]}, labels={"label": batch["label"]}
+                images={"image": batch["image"]},
+                labels={"label": batch["label"]},
             ),
             outputs=OutputDict(labels={"label": pred}),
         )

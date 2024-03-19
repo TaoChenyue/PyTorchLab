@@ -42,7 +42,7 @@ def main(root: str = "dataset", epochs: int = 10, limit_batches: int | None = No
     trainer = Trainer(
         devices=int(torch.cuda.is_available()),
         max_epochs=epochs,
-        logger=[TensorBoardLogger("lightning_logs/test_ae", "mnist_anomaly")],
+        logger=[TensorBoardLogger("logs/test_ae", "mnist_anomaly")],
         callbacks=[
             LossCallback(),
             ImageCallback(input_names=["image"], output_names=["image"]),
