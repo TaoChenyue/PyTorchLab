@@ -1,0 +1,310 @@
+# lightning.pytorch==2.1.4
+seed_everything: 1234
+trainer:
+  accelerator: auto
+  strategy: auto
+  devices: auto
+  num_nodes: 1
+  precision: null
+  logger:
+    class_path: lightning.pytorch.loggers.TensorBoardLogger
+    init_args:
+      save_dir: logs/pix2pix
+      name: facades
+      version: null
+      log_graph: false
+      default_hp_metric: true
+      prefix: ''
+      sub_dir: null
+      comment: ''
+      purge_step: null
+      max_queue: 10
+      flush_secs: 120
+      filename_suffix: ''
+  callbacks:
+  - class_path: pytorchlab.LossCallback
+    init_args:
+      prog_bar: true
+      on_epoch: true
+      on_step: false
+      sync_dist: true
+  - class_path: pytorchlab.ImageCallback
+    init_args:
+      batch_idx: 0
+      input_names:
+      - image
+      - reconstruct
+      output_names:
+      - reconstruct
+      nrow: 8
+      padding: 2
+      normalize: false
+      value_range: null
+      scale_each: false
+      pad_value: 0.0
+  - class_path: pytorchlab.MetricsIQACallback
+    init_args:
+      name: reconstruct
+  fast_dev_run: false
+  max_epochs: 100
+  min_epochs: null
+  max_steps: -1
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  overfit_batches: 0.0
+  val_check_interval: null
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: null
+  log_every_n_steps: null
+  enable_checkpointing: null
+  enable_progress_bar: null
+  enable_model_summary: null
+  accumulate_grad_batches: 1
+  gradient_clip_val: null
+  gradient_clip_algorithm: null
+  deterministic: null
+  benchmark: null
+  inference_mode: true
+  use_distributed_sampler: true
+  profiler: null
+  detect_anomaly: false
+  barebones: false
+  plugins: null
+  sync_batchnorm: false
+  reload_dataloaders_every_n_epochs: 0
+  default_root_dir: null
+ckpt_path: null
+data:
+  class_path: pytorchlab.DataModule
+  init_args:
+    train_datasets:
+      class_path: pytorchlab.SplitDataset
+      init_args:
+        dataset:
+          class_path: pytorchlab.ImagePairDataset
+          init_args:
+            root: dataset/facades/train
+            A_name: A
+            B_name: B
+            shuffle: false
+            transform:
+              class_path: torchvision.transforms.Compose
+              init_args:
+                transforms:
+                - class_path: torchvision.transforms.Resize
+                  init_args:
+                    size:
+                    - 256
+                    - 256
+                    #interpolation: BILINEAR
+                    max_size: null
+                    antialias: warn
+                - class_path: torchvision.transforms.ToTensor
+            target_transform: null
+        split: 0.2
+        seed: 42
+        train: true
+    val_datasets:
+      class_path: pytorchlab.SplitDataset
+      init_args:
+        dataset:
+          class_path: pytorchlab.ImagePairDataset
+          init_args:
+            root: dataset/facades/train
+            A_name: A
+            B_name: B
+            shuffle: false
+            transform:
+              class_path: torchvision.transforms.Compose
+              init_args:
+                transforms:
+                - class_path: torchvision.transforms.Resize
+                  init_args:
+                    size:
+                    - 256
+                    - 256
+                    #interpolation: BILINEAR
+                    max_size: null
+                    antialias: warn
+                - class_path: torchvision.transforms.ToTensor
+            target_transform: null
+        split: 0.2
+        seed: 42
+        train: false
+    test_datasets:
+      class_path: pytorchlab.ImagePairDataset
+      init_args:
+        root: dataset/facades/test
+        A_name: A
+        B_name: B
+        shuffle: false
+        transform:
+          class_path: torchvision.transforms.Compose
+          init_args:
+            transforms:
+            - class_path: torchvision.transforms.Resize
+              init_args:
+                size:
+                - 256
+                - 256
+                #interpolation: BILINEAR
+                max_size: null
+                antialias: warn
+            - class_path: torchvision.transforms.ToTensor
+        target_transform: null
+    predict_datasets:
+      class_path: pytorchlab.ImagePairDataset
+      init_args:
+        root: dataset/facades/test
+        A_name: A
+        B_name: B
+        shuffle: false
+        transform:
+          class_path: torchvision.transforms.Compose
+          init_args:
+            transforms:
+            - class_path: torchvision.transforms.Resize
+              init_args:
+                size:
+                - 256
+                - 256
+                #interpolation: BILINEAR
+                max_size: null
+                antialias: warn
+            - class_path: torchvision.transforms.ToTensor
+        target_transform: null
+    batch_size: 8
+    num_workers: 20
+    pin_memory: true
+    drop_last: false
+    collate_fn: null
+model:
+  class_path: pytorchlab.Pix2PixModule
+  init_args:
+    generator:
+      class_path: pytorchlab.UNet2d
+      init_args:
+        in_channel: 1
+        out_channel: 3
+        kernel_size: 4
+        stride: 2
+        padding: 1
+        nf: 64
+        depth: 5
+        hold_depth: 3
+        norm:
+          class_path: torch.nn.Identity
+        down_activation:
+          class_path: torch.nn.ReLU
+          init_args:
+            inplace: true
+        up_activation:
+          class_path: torch.nn.Tanh
+        submodule:
+          class_path: torch.nn.Identity
+    discriminator:
+      class_path: pytorchlab.SequentialConv2dBlock
+      init_args:
+        paras:
+        - - 4
+          - 64
+          - 4
+          - 2
+          - 1
+        - - 64
+          - 128
+          - 4
+          - 2
+          - 1
+        - - 128
+          - 64
+          - 4
+          - 2
+          - 1
+        - - 64
+          - 1
+          - 4
+          - 1
+          - 1
+        norm:
+          class_path: torch.nn.Identity
+        activation:
+          class_path: torch.nn.ReLU
+          init_args:
+            inplace: true
+        padding_method:
+          class_path: torch.nn.ZeroPad2d
+    criterion_generator:
+      class_path: pytorchlab.modules.vision.image.generation.GANs.Pix2Pix.pix2pix.Pix2PixGeneratorLoss
+      init_args:
+        criterion_gan:
+          class_path: torch.nn.MSELoss
+          init_args:
+            size_average: null
+            reduce: null
+            reduction: mean
+        criterion_image:
+          class_path: torch.nn.L1Loss
+          init_args:
+            size_average: null
+            reduce: null
+            reduction: mean
+        lambda_gan: 1.0
+        lambda_image: 100.0
+    criterion_discriminator:
+      class_path: pytorchlab.modules.vision.image.generation.GANs.Pix2Pix.pix2pix.Pix2PixDiscriminatorLoss
+      init_args:
+        criterion:
+          class_path: torch.nn.MSELoss
+          init_args:
+            size_average: null
+            reduce: null
+            reduction: mean
+    optimizer_g:
+      class_path: torch.optim.Adam
+      init_args:
+        lr: 0.0001
+        betas:
+        - 0.5
+        - 0.999
+        eps: 1.0e-08
+        weight_decay: 0.0
+        amsgrad: false
+        foreach: null
+        maximize: false
+        capturable: false
+        differentiable: false
+        fused: null
+    optimizer_d:
+      class_path: torch.optim.Adam
+      init_args:
+        lr: 0.0001
+        betas:
+        - 0.5
+        - 0.999
+        eps: 1.0e-08
+        weight_decay: 0.0
+        amsgrad: false
+        foreach: null
+        maximize: false
+        capturable: false
+        differentiable: false
+        fused: null
+    lr_g:
+      class_path: torch.optim.lr_scheduler.ConstantLR
+      init_args:
+        factor: 1.0
+        total_iters: 5
+        last_epoch: -1
+        verbose: false
+    lr_d:
+      class_path: torch.optim.lr_scheduler.ConstantLR
+      init_args:
+        factor: 1.0
+        total_iters: 5
+        last_epoch: -1
+        verbose: false

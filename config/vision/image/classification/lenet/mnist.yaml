@@ -1,0 +1,168 @@
+# lightning.pytorch==2.1.4
+seed_everything: 1234
+trainer:
+  accelerator: auto
+  strategy: auto
+  devices: auto
+  num_nodes: 1
+  precision: null
+  logger:
+    class_path: lightning.pytorch.loggers.TensorBoardLogger
+    init_args:
+      save_dir: logs/lenet
+      name: mnist
+      version: null
+      log_graph: false
+      default_hp_metric: true
+      prefix: ''
+      sub_dir: null
+      comment: ''
+      purge_step: null
+      max_queue: 10
+      flush_secs: 120
+      filename_suffix: ''
+  callbacks:
+  - class_path: pytorchlab.LossCallback
+    init_args:
+      prog_bar: true
+      on_epoch: true
+      on_step: false
+      sync_dist: true
+  - class_path: pytorchlab.ImageCallback
+    init_args:
+      batch_idx: 0
+      input_names: [image]
+      output_names: []
+      nrow: 8
+      padding: 2
+      normalize: false
+      value_range: null
+      scale_each: false
+      pad_value: 0.0
+  - class_path: pytorchlab.LabelNameCallback
+    init_args:
+      batch_idx: 0
+      input_names: [label]
+      output_names: [label]
+      name_list: config/_meta/mnist_classes.yaml
+  - class_path: pytorchlab.MetricsClassificationCallback
+    init_args:
+      name: label
+      num_classes: 10
+  fast_dev_run: false
+  max_epochs: 10
+  min_epochs: null
+  max_steps: -1
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  overfit_batches: 0.0
+  val_check_interval: null
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: null
+  log_every_n_steps: null
+  enable_checkpointing: null
+  enable_progress_bar: null
+  enable_model_summary: null
+  accumulate_grad_batches: 1
+  gradient_clip_val: null
+  gradient_clip_algorithm: null
+  deterministic: null
+  benchmark: null
+  inference_mode: true
+  use_distributed_sampler: true
+  profiler: null
+  detect_anomaly: false
+  barebones: false
+  plugins: null
+  sync_batchnorm: false
+  reload_dataloaders_every_n_epochs: 0
+  default_root_dir: null
+ckpt_path: null
+data:
+  class_path: pytorchlab.DataModule
+  init_args:
+    train_datasets:
+      class_path: pytorchlab.SplitDataset
+      init_args:
+        dataset:
+          class_path: pytorchlab.MNISTDataset
+          init_args:
+            root: dataset
+            train: true
+            transform:
+              class_path: torchvision.transforms.ToTensor
+            target_transform: null
+            download: true
+        split: 0.2
+        seed: 42
+        train: true
+    val_datasets:
+      class_path: pytorchlab.SplitDataset
+      init_args:
+        dataset:
+          class_path: pytorchlab.MNISTDataset
+          init_args:
+            root: dataset
+            train: true
+            transform:
+              class_path: torchvision.transforms.ToTensor
+            target_transform: null
+            download: true
+        split: 0.2
+        seed: 42
+        train: false
+    test_datasets:
+      class_path: pytorchlab.SplitDataset
+      init_args:
+        dataset:
+          class_path: pytorchlab.MNISTDataset
+          init_args:
+            root: dataset
+            train: false
+            transform:
+              class_path: torchvision.transforms.ToTensor
+            target_transform: null
+            download: true
+        split: 0.2
+        seed: 42
+        train: true
+    predict_datasets:
+      class_path: pytorchlab.SplitDataset
+      init_args:
+        dataset:
+          class_path: pytorchlab.MNISTDataset
+          init_args:
+            root: dataset
+            train: false
+            transform:
+              class_path: torchvision.transforms.ToTensor
+            target_transform: null
+            download: true
+        split: 0.2
+        seed: 42
+        train: false
+    batch_size: 64
+    num_workers: 20
+    pin_memory: true
+    drop_last: false
+    collate_fn: null
+model:
+  class_path: pytorchlab.LeNet5Module
+  init_args:
+    channel: 1
+    height: 28
+    width: 28
+    num_classes: 10
+    criterion:
+      class_path: torch.nn.CrossEntropyLoss
+      init_args:
+        weight: null
+        size_average: null
+        ignore_index: -100
+        reduce: null
+        reduction: mean
+        label_smoothing: 0.0
