@@ -168,9 +168,9 @@ cython_debug/
 # dataset soft link
 /dataset
 
-# experiments
+# test
 test*.yaml
-/experiments/
+/test
 
 # visualize
 output/

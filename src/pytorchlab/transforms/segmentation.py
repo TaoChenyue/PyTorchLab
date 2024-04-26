@@ -2,7 +2,6 @@ import numpy as np
 import torch
 from PIL import Image
 from torchvision import transforms
-from typing import Literal
 
 __all__ = [
     "Image2SementicLabel",

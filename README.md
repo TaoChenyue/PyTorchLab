@@ -30,3 +30,5 @@ pip install -e .
 | [Pascal-VOC](http://host.robots.ox.ac.uk/pascal/VOC/)                 | PASCAL-VOC                                                                           |
 | [CUB-200-2011](https://www.vision.caltech.edu/datasets/cub_200_2011/) | CUB                                                                                  |
 | [LSRW](https://arxiv.org/abs/2106.14501)                              | LSRW                                                                                 |
+| [LOL](https://daooshee.github.io/BMVC2018website/)                    | LOL                                                                                  |
+| [Birds&Insects](https://doi.org/10.1109/ICIP.2016.7532820)            | Birds&Insects                                                                        |
