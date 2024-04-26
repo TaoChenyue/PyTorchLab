@@ -6,6 +6,10 @@ from torch.utils.data import DataLoader, Dataset
 
 from pytorchlab.dataloaders import SequentialLoader
 
+__all__ = [
+    "DataModule",
+]
+
 
 class DataModule(LightningDataModule):
     def __init__(
@@ -24,31 +28,26 @@ class DataModule(LightningDataModule):
         _summary_
 
         Args:
-            train_datasets (Dataset | Iterable[Dataset] | None, optional): _description_. Defaults to None.
-            val_datasets (Dataset | Iterable[Dataset] | None, optional): _description_. Defaults to None.
-            test_datasets (Dataset | Iterable[Dataset] | None, optional): _description_. Defaults to None.
-            predict_datasets (Dataset | Iterable[Dataset] | None, optional): _description_. Defaults to None.
-            batch_size (int, optional): _description_. Defaults to 1.
-            num_workers (int, optional): _description_. Defaults to 4.
-            pin_memory (bool, optional): _description_. Defaults to True.
-            drop_last (bool, optional): _description_. Defaults to False.
-            collate_fn (Callable | None, optional): _description_. Defaults to None.
+            train_datasets (Dataset | Iterable[Dataset] | None, optional): train datasets. Defaults to None.
+            val_datasets (Dataset | Iterable[Dataset] | None, optional): validation datasets. Defaults to None.
+            test_datasets (Dataset | Iterable[Dataset] | None, optional): test datasets. Defaults to None.
+            predict_datasets (Dataset | Iterable[Dataset] | None, optional): prediction datasets. Defaults to None.
+            batch_size (int, optional): size of one batch. Defaults to 1.
+            num_workers (int, optional): number of workers. Defaults to 4.
+            pin_memory (bool, optional): lock data into memory. Defaults to True.
+            drop_last (bool, optional): drop the last epoch. Defaults to False.
+            collate_fn (Callable | None, optional): functions for each item. Defaults to None.
         """
         super().__init__()
         self.train_datasets = self._datasets(train_datasets)
         self.val_datasets = self._datasets(val_datasets)
         self.test_datasets = self._datasets(test_datasets)
         self.predict_datasets = self._datasets(predict_datasets)
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.pin_memory = pin_memory
+        self.drop_last = drop_last
         self.collate_fn = collate_fn
-        self.save_hyperparameters(
-            ignore=[
-                "train_datasets",
-                "val_datasets",
-                "test_datasets",
-                "predict_datasets",
-                "collate_fn",
-            ]
-        )
 
     def _datasets(
         self, datasets: Dataset | Iterable[Dataset] | None
@@ -67,11 +66,11 @@ class DataModule(LightningDataModule):
             DataLoader(
                 dataset=dataset,
                 shuffle=shuffle,
-                batch_size=self.hparams.batch_size,
-                num_workers=self.hparams.num_workers,
-                pin_memory=self.hparams.pin_memory,
-                drop_last=self.hparams.drop_last,
-                persistent_workers=self.hparams.num_workers > 0,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                pin_memory=self.pin_memory,
+                drop_last=self.drop_last,
+                persistent_workers=self.num_workers > 0,
                 collate_fn=self.collate_fn,
             )
             for dataset in datasets

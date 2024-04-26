@@ -6,6 +6,11 @@ from pytorchlab.models.decoder.convtranspose import ConvTranspose2dBlock
 from pytorchlab.models.encoder.conv import Conv2dBlock
 from pytorchlab.typehints import ModuleCallable
 
+__all__ = [
+    "AutoEncoder2dBlock",
+    "AutoEncoder2d",
+]
+
 
 class AutoEncoder2dBlock(nn.Module):
     def __init__(

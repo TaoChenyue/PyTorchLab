@@ -6,7 +6,7 @@ from torch import nn
 
 from pytorchlab.typehints import ModuleCallable
 
-__all__ = ["Conv2dBlock", "SequentialConv2dBlock"]
+__all__ = ["Conv2dBlock", "SequentialConv2dBlock", "SequentialConvPool2dBlock"]
 
 
 class Conv2dBlock(nn.Module):
@@ -55,6 +55,39 @@ class SequentialConv2dBlock(nn.Module):
                     norm=norm,
                     activation=activation,
                     padding_method=padding_method,
+                )
+                for para in paras
+            ]
+        )
+
+    def forward(self, x: torch.Tensor):
+        return self.model(x)
+
+
+class SequentialConvPool2dBlock(nn.Module):
+    def __init__(
+        self,
+        paras: Sequence[tuple[int, int, int, int, int]],
+        norm: ModuleCallable = nn.Identity,
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+        padding_method: ModuleCallable = nn.ZeroPad2d,
+        pool: nn.Module = lazy_instance(nn.MaxPool2d, kernel_size=2),
+    ):
+        super().__init__()
+        self.model = nn.Sequential(
+            *[
+                nn.Sequential(
+                    Conv2dBlock(
+                        in_channels=para[0],
+                        out_channels=para[1],
+                        kernel_size=para[2],
+                        stride=para[3],
+                        padding=para[4],
+                        norm=norm,
+                        activation=activation,
+                        padding_method=padding_method,
+                    ),
+                    pool,
                 )
                 for para in paras
             ]

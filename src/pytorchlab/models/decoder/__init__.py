@@ -1,2 +1,2 @@
-from .convtranspose import ConvTranspose2dBlock
-from .upsample import Upsample2dBlock
+from .convtranspose import *
+from .upsample import *

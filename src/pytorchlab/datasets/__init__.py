@@ -1,2 +1,3 @@
-from .utils import *
-from .vision import *
+from .classification import *
+from .imagepair import *
+from .segmentation import *

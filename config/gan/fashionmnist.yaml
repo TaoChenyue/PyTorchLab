@@ -1,0 +1,159 @@
+# lightning.pytorch==2.2.1
+seed_everything: 1234
+trainer:
+  accelerator: auto
+  strategy: auto
+  devices: auto
+  num_nodes: 1
+  precision: null
+  logger:
+    class_path: lightning.pytorch.loggers.TensorBoardLogger
+    init_args:
+      save_dir: logs/gan
+      name: fashionmnist
+      version: null
+      log_graph: false
+      default_hp_metric: true
+      prefix: ''
+      sub_dir: null
+      comment: ''
+      purge_step: null
+      max_queue: 10
+      flush_secs: 120
+      filename_suffix: ''
+  callbacks:
+  - class_path: pytorchlab.callbacks.LossCallback
+  - class_path: pytorchlab.experiments.gan.GANCallback
+    init_args:
+      latent_dim: 100
+      nums: 25
+      show_epoch: true
+      nrow: 5
+      padding: 2
+      normalize: false
+      value_range: null
+      scale_each: false
+      pad_value: 0.0
+  fast_dev_run: false
+  max_epochs: 100
+  min_epochs: null
+  max_steps: -1
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  overfit_batches: 0.0
+  val_check_interval: null
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: null
+  log_every_n_steps: null
+  enable_checkpointing: null
+  enable_progress_bar: null
+  enable_model_summary: null
+  accumulate_grad_batches: 1
+  gradient_clip_val: null
+  gradient_clip_algorithm: null
+  deterministic: null
+  benchmark: null
+  inference_mode: true
+  use_distributed_sampler: true
+  profiler: null
+  detect_anomaly: false
+  barebones: false
+  plugins: null
+  sync_batchnorm: false
+  reload_dataloaders_every_n_epochs: 0
+  default_root_dir: null
+ckpt_path: null
+data:
+  class_path: pytorchlab.datamodules.DataModule
+  init_args:
+    train_datasets:
+      class_path: torchvision.datasets.FashionMNIST
+      init_args:
+        root: dataset
+        train: true
+        transform:
+          class_path: torchvision.transforms.ToTensor
+        target_transform: null
+        download: true
+    val_datasets: null
+    test_datasets: null
+    predict_datasets: null
+    batch_size: 32
+    num_workers: 4
+    pin_memory: true
+    drop_last: false
+    collate_fn:
+      class_path: pytorchlab.datasets.ClassifyCollateFn
+model:
+  class_path: pytorchlab.experiments.gan.GANModule
+  init_args:
+    latent_dim: 100
+    generator:
+      class_path: pytorchlab.experiments.gan.Generator
+      init_args:
+        latent_dim: 100
+        channels: 1
+        height: 28
+        width: 28
+    discriminator:
+      class_path: pytorchlab.experiments.gan.Discriminator
+      init_args:
+        latent_dim: 100
+        channels: 1
+        height: 28
+        width: 28
+    criterion:
+      class_path: torch.nn.BCELoss
+      init_args:
+        weight: null
+        size_average: null
+        reduce: null
+        reduction: mean
+    optimizer_g:
+      class_path: torch.optim.Adam
+      init_args:
+        lr: 0.0002
+        betas:
+        - 0.5
+        - 0.999
+        eps: 1.0e-08
+        weight_decay: 0.0
+        amsgrad: false
+        foreach: null
+        maximize: false
+        capturable: false
+        differentiable: false
+        fused: null
+    optimizer_d:
+      class_path: torch.optim.Adam
+      init_args:
+        lr: 0.0002
+        betas:
+        - 0.5
+        - 0.999
+        eps: 1.0e-08
+        weight_decay: 0.0
+        amsgrad: false
+        foreach: null
+        maximize: false
+        capturable: false
+        differentiable: false
+        fused: null
+    lr_g:
+      class_path: torch.optim.lr_scheduler.ConstantLR
+      init_args:
+        factor: 1.0
+        total_iters: 5
+        last_epoch: -1
+        verbose: deprecated
+    lr_d:
+      class_path: torch.optim.lr_scheduler.ConstantLR
+      init_args:
+        factor: 1.0
+        total_iters: 5
+        last_epoch: -1
+        verbose: deprecated

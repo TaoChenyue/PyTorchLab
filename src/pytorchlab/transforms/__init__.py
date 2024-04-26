@@ -1,1 +1,2 @@
-from .image import *
+from .noise import *
+from .segmentation import *

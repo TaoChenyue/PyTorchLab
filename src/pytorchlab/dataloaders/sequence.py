@@ -1,7 +1,7 @@
 from typing import Sequence
 
 
-# From [issue](https://github.com/Lightning-AI/pytorch-lightning/discussions/11024https://github.com/Lightning-AI/pytorch-lightning/discussions/11024)
+# From [issue](https://github.com/Lightning-AI/pytorch-lightning/discussions/11024)
 class SequentialLoader:
     def __init__(self, *dataloaders: Sequence):
         self.dataloaders = dataloaders

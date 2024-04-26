@@ -7,6 +7,8 @@ from torch import nn
 from pytorchlab.models.encoder.conv import Conv2dBlock
 from pytorchlab.typehints import ModuleCallable
 
+__all__ = ["Upsample2dBlock", "SequentialUpsample2dBlock"]
+
 
 class Upsample2dBlock(nn.Module):
     def __init__(
@@ -44,3 +46,30 @@ class Upsample2dBlock(nn.Module):
         x = self.deconv(x)
         x = self.conv_block(x)
         return x
+
+
+class SequentialUpsample2dBlock(nn.Module):
+    def __init__(
+        self,
+        paras: Sequence[tuple[int, int, int, int, int]],
+        norm: ModuleCallable = nn.Identity,
+        activation: nn.Module = lazy_instance(nn.ReLU, inplace=True),
+    ):
+        super().__init__()
+        self.model = nn.Sequential(
+            *[
+                Upsample2dBlock(
+                    in_channels=para[0],
+                    out_channels=para[1],
+                    kernel_size=para[2],
+                    stride=para[3],
+                    padding=para[4],
+                    norm=norm,
+                    activation=activation,
+                )
+                for para in paras
+            ]
+        )
+
+    def forward(self, x: torch.Tensor):
+        return self.model(x)

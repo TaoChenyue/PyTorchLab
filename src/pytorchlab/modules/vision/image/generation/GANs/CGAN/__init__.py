@@ -1,1 +1,0 @@
-from .cgan import CGANModule

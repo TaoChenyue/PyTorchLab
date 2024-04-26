@@ -6,6 +6,8 @@ from torch import nn
 
 from pytorchlab.typehints import ModuleCallable
 
+__all__ = ["ConvTranspose2dBlock", "SequentialConvTranspose2dBlock"]
+
 
 class ConvTranspose2dBlock(nn.Module):
     def __init__(
