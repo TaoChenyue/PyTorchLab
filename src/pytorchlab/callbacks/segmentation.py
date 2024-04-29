@@ -5,23 +5,29 @@ from lightning import LightningModule, Trainer
 from lightning.pytorch import Callback
 from torchmetrics import MetricCollection
 
-from pytorchlab.metrics import SegmentationIOUMetric
+from pytorchlab.metrics.segmentation import SemanticDiceMetric, SemanticIOUMetric
 from pytorchlab.typehints import OutputsDict
 from pytorchlab.utils.state import get_stage
 
-__all__ = ["MetricsSegmentationCallback"]
+__all__ = ["MetricsSemanticCallback"]
 
 
-class MetricsSegmentationCallback(Callback):
-    def __init__(self, name: str) -> None:
+class MetricsSemanticCallback(Callback):
+    def __init__(
+        self,
+        name: str,
+        threshold: float = 0.5,
+    ) -> None:
         super().__init__()
         self.name = name
+        self.threshold = threshold
         self.metrics_dict = self.get_metrics(name)
 
     def get_metrics(self, name: str):
         return MetricCollection(
             {
-                f"{name}_iou": SegmentationIOUMetric(),
+                f"{name}_iou": SemanticIOUMetric(threshold=self.threshold),
+                f"{name}_dice": SemanticDiceMetric(threshold=self.threshold),
             }
         )
 
@@ -37,6 +43,8 @@ class MetricsSegmentationCallback(Callback):
 
     def _start(self, pl_module: LightningModule):
         self.metrics_dict.to(pl_module.device)
+
+    def _epoch_start(self):
         self.metrics_dict.reset()
 
     def _batch_end(self, outputs: OutputsDict):
@@ -52,6 +60,11 @@ class MetricsSegmentationCallback(Callback):
 
     def on_validation_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         self._start(pl_module)
+
+    def on_validation_epoch_start(
+        self, trainer: Trainer, pl_module: LightningModule
+    ) -> None:
+        self._epoch_start()
 
     def on_validation_batch_end(
         self,
@@ -71,6 +84,9 @@ class MetricsSegmentationCallback(Callback):
 
     def on_test_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         self._start(pl_module)
+
+    def on_test_epoch_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
+        self._epoch_start()
 
     def on_test_batch_end(
         self,
@@ -96,6 +112,9 @@ if __name__ == "__main__":
         torch.sum(torch.where((a > 0.5) & (b > 0.5), 1, 0))
         / torch.sum(torch.where((a > 0.5) | (b > 0.5), 1, 0))
     )
-    metric = SegmentationIOUMetric()
+    metric = SemanticIOUMetric()
+    metric.update(a, b)
+    print(metric.compute())
+    metric = SemanticDiceMetric()
     metric.update(a, b)
     print(metric.compute())

@@ -1,18 +1,24 @@
 import torch
 from torch import nn
 
-from pytorchlab.metrics import SegmentationDiceMetric
-
 __all__ = [
-    "SegmentationDiceLoss",
+    "SemanticDiceLoss",
 ]
 
 
-class SegmentationDiceLoss(nn.Module):
-    def __init__(self, num_classes: int):
+class SemanticDiceLoss(nn.Module):
+    def __init__(self):
         super().__init__()
-        self.num_classes = num_classes
-        self.dice_metric = SegmentationDiceMetric(num_classes)
+        self.smooth = 1e-8
 
-    def forward(self, pred: torch.Tensor, target: torch.Tensor):
-        return 1.0 - self.dice_metric(pred, target)
+    def forward(self, pred, target):
+        pred_flat = pred.view(-1)
+        target_flat = target.view(-1)
+
+        intersection = torch.sum(pred_flat * target_flat)
+        union = torch.sum(pred_flat) + torch.sum(target_flat)
+
+        dice_coefficient = (2.0 * intersection + self.smooth) / (union + self.smooth)
+        dice_loss = 1.0 - dice_coefficient
+
+        return dice_loss

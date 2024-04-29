@@ -16,12 +16,20 @@ class Image2SementicLabel(object):
     def __call__(self, img: Image.Image) -> torch.Tensor:
         if self.num_classes == 1:
             return transforms.ToTensor()(img)
-        img_np = np.array(img, dtype=np.uint8)
-        if img_np.ndim == 3:
-            img_np = img_np.squeeze(axis=-1)
-        img_np = np.where(img_np >= self.num_classes, 0, img_np)
-        img = torch.tensor(img_np, dtype=torch.long)
-        return img.unsqueeze(dim=0)
+        assert len(img.split()) == 1, "The input image must be a grayscale image."
+        img_np = torch.tensor(np.array(img, dtype=np.uint8))
+        img_onehot = torch.cat(
+            [
+                torch.where(
+                    img_np == i,
+                    torch.ones_like(img_np, dtype=torch.float32),
+                    torch.zeros_like(img_np, dtype=torch.float32),
+                ).unsqueeze(dim=0)
+                for i in range(self.num_classes)
+            ],
+            dim=-3,
+        )
+        return img_onehot
 
 
 class RandomColormap(object):
@@ -49,6 +57,7 @@ class RandomColormap(object):
     def __call__(self, img: torch.Tensor):
         if self.num_classes == 1:
             return img
+        img = torch.argmax(img, dim=-3, keepdim=True)
         R = self.channel_R.to(img.device)[img]
         G = self.channel_G.to(img.device)[img]
         B = self.channel_B.to(img.device)[img]

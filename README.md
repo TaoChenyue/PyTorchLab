@@ -32,3 +32,4 @@ pip install -e .
 | [LSRW](https://arxiv.org/abs/2106.14501)                              | LSRW                                                                                 |
 | [LOL](https://daooshee.github.io/BMVC2018website/)                    | LOL                                                                                  |
 | [Birds&Insects](https://doi.org/10.1109/ICIP.2016.7532820)            | Birds&Insects                                                                        |
+| [ISBI2012](https://github.com/decouples/Unet)                         | ISBI_2012.zip                                                                        |

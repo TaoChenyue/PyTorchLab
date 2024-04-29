@@ -2,7 +2,7 @@ import torch
 from lightning.pytorch import LightningModule
 from torch import nn
 
-from pytorchlab.criterions import SegmentationDiceLoss
+from pytorchlab.criterions import SemanticDiceLoss
 from pytorchlab.experiments.unet.torch_model import UNet
 from pytorchlab.transforms import RandomColormap
 from pytorchlab.typehints import ImageDatasetItem, OutputsDict
@@ -16,24 +16,34 @@ class UNetModule(LightningModule):
     def __init__(
         self,
         in_channels: int,
-        out_channels: int,
+        num_classes: int,
         bilinear: bool = False,
         lr: float = 1e-4,
     ):
+        """
+        U-Net: Convolutional Networks for Biomedical Image Segmentation
+        DOI:
+            - arxiv: https://arxiv.org/abs/1505.04597
+            - Springer: https://doi.org/10.1007/978-3-319-24574-4_28
+
+        Args:
+            in_channels (int): number of channel in the input image
+            num_classes (int): number of class in the output mask
+            bilinear (bool, optional): use bilinear when upsample. Defaults to False.
+            lr (float, optional): learning rate. Defaults to 1e-4.
+        """
         super().__init__()
         self.in_channels = in_channels
-        self.out_channels = out_channels
+        self.out_channels = num_classes
         self.model = UNet(
             in_channels=in_channels,
-            out_channels=out_channels,
+            out_channels=num_classes,
             bilinear=bilinear,
         )
         self.lr = lr
-        self.colormap = RandomColormap(num_classes=out_channels)
-        self.criterion = (
-            nn.CrossEntropyLoss() if out_channels > 1 else nn.BCEWithLogitsLoss()
-        )
-        self.criterion_dice = SegmentationDiceLoss(num_classes=out_channels)
+        self.colormap = RandomColormap(num_classes=num_classes)
+        self.criterion = nn.CrossEntropyLoss() if num_classes > 1 else nn.BCELoss()
+        self.criterion_dice = SemanticDiceLoss()
 
     def forward(self, x):
         return self.model(x)
@@ -45,18 +55,10 @@ class UNetModule(LightningModule):
         image = batch["image"]
         segmentation = batch["mask"]
         pred: torch.Tensor = self(image)
+        pred = pred.sigmoid()
         loss = self.criterion(pred, segmentation) + self.criterion_dice(
             pred, segmentation
         )
-
-        if self.out_channels == 1:
-            mask_colormap = torch.where(
-                pred > 0.5,
-                torch.ones_like(pred, dtype=torch.float32),
-                torch.zeros_like(pred, dtype=torch.float32),
-            )
-        else:
-            mask_colormap = self.colormap(pred.argmax(dim=-3, keepdim=True))
 
         return OutputsDict(
             loss=loss,
@@ -68,7 +70,7 @@ class UNetModule(LightningModule):
             },
             outputs={
                 "mask": pred,
-                "mask_colormap": mask_colormap,
+                "mask_colormap": self.colormap(pred),
             },
         )
 

@@ -2,52 +2,57 @@ import torch
 from torchmetrics import Metric
 
 __all__ = [
-    "SegmentationIOUMetric",
-    "SegmentationDiceMetric",
+    "SemanticIOUMetric",
+    "SemanticDiceMetric",
 ]
 
 
-class SegmentationIOUMetric(Metric):
-    def __init__(self):
+class SemanticIOUMetric(Metric):
+    def __init__(self, threshold: float = 0.5):
         super().__init__()
-        self.add_state("iou", default=torch.tensor(0.0), dist_reduce_fx="sum")
-        self.add_state("total", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("intersection", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("union", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.threshold = threshold
+        self.smooth = 1e-8
 
-    def update(self, a: torch.Tensor, b: torch.Tensor):
-        self.iou += torch.sum(torch.where((a > 0.5) & (b > 0.5), 1, 0)) / torch.sum(
-            torch.where((a > 0.5) | (b > 0.5), 1, 0)
+    def update(self, pred: torch.Tensor, target: torch.Tensor):
+        pred_masks = torch.where(
+            pred > self.threshold, torch.ones_like(pred), torch.zeros_like(pred)
         )
-        self.total += b.shape[0] if b.ndim == 4 else 1
+        target_masks = torch.where(
+            target > self.threshold, torch.ones_like(target), torch.zeros_like(target)
+        )
+        intersection = torch.logical_and(pred_masks, target_masks).sum()
+        union = torch.logical_or(pred_masks, target_masks).sum()
+        self.intersection += intersection
+        self.union += union
 
     def compute(self):
-        return self.iou / self.total
+        return (self.intersection + self.smooth) / (self.union + self.smooth)
 
 
-class SegmentationDiceMetric(Metric):
-    def __init__(self, num_classes: int):
+class SemanticDiceMetric(Metric):
+    def __init__(self, threshold: float = 0.5):
         super().__init__()
-        self.num_classes = num_classes
-        self.add_state("dice", default=torch.tensor(0.0), dist_reduce_fx="sum")
-        self.add_state("total", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("intersection", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("pred_sum", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("target_sum", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.threshold = threshold
+        self.smooth = 1e-8
 
-    def update(self, a: torch.Tensor, b: torch.Tensor):
-        assert a.shape == b.shape, "a and b must have the same shape"
-        if self.num_classes == 1:
-            a_onehot = a
-        else:
-            a_onehot = torch.cat(
-                [
-                    torch.where(a == i, torch.ones_like(a), torch.zeros_like(a))
-                    for i in range(self.num_classes)
-                ],
-                dim=-3,
-            )
-        b_onehot = torch.where(b < 0.5, torch.zeros_like(b), torch.ones_like(b))
-        a_sum = torch.sum(a_onehot, dim=[-1, -2])
-        b_sum = torch.sum(b_onehot, dim=[-1, -2])
-        intersection_sum = torch.sum(a_onehot * b_onehot, dim=[-1, -2])
-        self.dice += torch.mean((2 * intersection_sum + 1.0) / (a_sum + b_sum + 1.0))
-        self.total += b.shape[0] if b.ndim == 4 else 1
+    def update(self, pred: torch.Tensor, target: torch.Tensor):
+        pred_masks = torch.where(
+            pred > self.threshold, torch.ones_like(pred), torch.zeros_like(pred)
+        )
+        target_masks = torch.where(
+            target > self.threshold, torch.ones_like(target), torch.zeros_like(target)
+        )
+        intersection = torch.logical_and(pred_masks, target_masks).sum()
+        self.intersection += intersection
+        self.pred_sum += pred_masks.sum()
+        self.target_sum += target_masks.sum()
 
     def compute(self):
-        return self.dice / self.total
+        return (2 * self.intersection + self.smooth) / (
+            self.pred_sum + self.target_sum + self.smooth
+        )
