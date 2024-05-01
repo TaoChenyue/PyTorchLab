@@ -91,6 +91,7 @@ class ImageLabelCallback(Callback):
             pl_module,
             batch_idx=batch_idx,
             dataloader_idx=dataloader_idx,
+            show_epoch=self.show_epoch,
         )
         if save_path is None:
             return

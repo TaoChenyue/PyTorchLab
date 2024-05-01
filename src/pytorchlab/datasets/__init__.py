@@ -1,3 +1,3 @@
 from .classification import *
-from .imagepair import *
+from .generation import *
 from .segmentation import *

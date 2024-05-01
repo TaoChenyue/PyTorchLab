@@ -9,7 +9,7 @@ __all__ = [
 
 class ImageDatasetItem(TypedDict, total=False):
     image: Tensor  # source image
-    image2: Tensor  # for generation
+    generation: Tensor  # for generation
     mask: Tensor  # for segmentation
     label: Tensor  # for classification
     score: Tensor  # for quality assessment

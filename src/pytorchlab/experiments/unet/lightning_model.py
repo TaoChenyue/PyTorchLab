@@ -2,21 +2,21 @@ import torch
 from lightning.pytorch import LightningModule
 from torch import nn
 
-from pytorchlab.criterions import SemanticDiceLoss
-from pytorchlab.experiments.unet.torch_model import UNet
+from pytorchlab.experiments.unet.torch_model import Unet
 from pytorchlab.transforms import RandomColormap
 from pytorchlab.typehints import ImageDatasetItem, OutputsDict
 
 __all__ = [
-    "UNetModule",
+    "UnetModule",
 ]
 
 
-class UNetModule(LightningModule):
+class UnetModule(LightningModule):
     def __init__(
         self,
-        in_channels: int,
-        num_classes: int,
+        in_channels: int = 3,
+        num_classes: int = 1,
+        features: list[int] = [64, 128, 256, 512],
         bilinear: bool = False,
         lr: float = 1e-4,
     ):
@@ -27,23 +27,26 @@ class UNetModule(LightningModule):
             - Springer: https://doi.org/10.1007/978-3-319-24574-4_28
 
         Args:
-            in_channels (int): number of channel in the input image
-            num_classes (int): number of class in the output mask
+            in_channels (int, optional): number of channel in the input image. Defaults to 3.
+            num_classes (int, optional): number of class in the output mask. Defaults to 1.
+            features (list[int], optional): features of unet. Defaults to [64, 128, 256, 512].
             bilinear (bool, optional): use bilinear when upsample. Defaults to False.
             lr (float, optional): learning rate. Defaults to 1e-4.
         """
         super().__init__()
         self.in_channels = in_channels
         self.out_channels = num_classes
-        self.model = UNet(
+        self.model = Unet(
             in_channels=in_channels,
             out_channels=num_classes,
+            features=features,
             bilinear=bilinear,
         )
         self.lr = lr
         self.colormap = RandomColormap(num_classes=num_classes)
-        self.criterion = nn.CrossEntropyLoss() if num_classes > 1 else nn.BCELoss()
-        self.criterion_dice = SemanticDiceLoss()
+        self.criterion = (
+            nn.CrossEntropyLoss() if num_classes > 1 else nn.BCEWithLogitsLoss()
+        )
 
     def forward(self, x):
         return self.model(x)
@@ -55,10 +58,7 @@ class UNetModule(LightningModule):
         image = batch["image"]
         segmentation = batch["mask"]
         pred: torch.Tensor = self(image)
-        pred = pred.sigmoid()
-        loss = self.criterion(pred, segmentation) + self.criterion_dice(
-            pred, segmentation
-        )
+        loss = self.criterion(pred, segmentation)
 
         return OutputsDict(
             loss=loss,
@@ -69,8 +69,8 @@ class UNetModule(LightningModule):
                 "mask_colormap": self.colormap(segmentation),
             },
             outputs={
-                "mask": pred,
-                "mask_colormap": self.colormap(pred),
+                "mask": pred.sigmoid(),
+                "mask_colormap": self.colormap(pred.sigmoid()),
             },
         )
 

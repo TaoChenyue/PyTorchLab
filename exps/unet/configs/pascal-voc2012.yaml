@@ -10,7 +10,7 @@ trainer:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
       save_dir: logs/unet
-      name: ISBI2012
+      name: pascal-voc2012
       version: null
       log_graph: false
       default_hp_metric: true
@@ -46,7 +46,7 @@ trainer:
       name: mask
       threshold: 0.5
   fast_dev_run: false
-  max_epochs: 100
+  max_epochs: 200
   min_epochs: null
   max_steps: -1
   min_steps: null
@@ -85,17 +85,35 @@ data:
       class_path: pytorchlab.utils.data.SplitDataset
       init_args:
         dataset:
-          class_path: pytorchlab.datasets.SegmentationDataset
+          class_path: torchvision.datasets.VOCSegmentation
           init_args:
-            root: dataset/ISBI_2012/train
-            images: images
-            segmentations: label
+            root: dataset
+            year: '2012'
+            image_set: train
+            download: false
             transform:
               class_path: torchvision.transforms.Compose
               init_args:
                 transforms:
+                - class_path: torchvision.transforms.Resize
+                  init_args:
+                    size:
+                    - 512
+                    - 512
                 - class_path: torchvision.transforms.ToTensor
-            target_transform: null
+            target_transform:
+              class_path: torchvision.transforms.Compose
+              init_args:
+                transforms:
+                - class_path: torchvision.transforms.Resize
+                  init_args:
+                    size:
+                    - 512
+                    - 512
+                - class_path: pytorchlab.transforms.Image2SementicLabel
+                  init_args:
+                    num_classes: 21
+            transforms: null
         split: 0.2
         seed: 42
         train: true
@@ -103,49 +121,84 @@ data:
       class_path: pytorchlab.utils.data.SplitDataset
       init_args:
         dataset:
-          class_path: pytorchlab.datasets.SegmentationDataset
+          class_path: torchvision.datasets.VOCSegmentation
           init_args:
-            root: dataset/ISBI_2012/train
-            images: images
-            segmentations: label
+            root: dataset
+            year: '2012'
+            image_set: train
+            download: false
             transform:
               class_path: torchvision.transforms.Compose
               init_args:
                 transforms:
+                - class_path: torchvision.transforms.Resize
+                  init_args:
+                    size:
+                    - 512
+                    - 512
                 - class_path: torchvision.transforms.ToTensor
-            target_transform: null
+            target_transform:
+              class_path: torchvision.transforms.Compose
+              init_args:
+                transforms:
+                - class_path: torchvision.transforms.Resize
+                  init_args:
+                    size:
+                    - 512
+                    - 512
+                - class_path: pytorchlab.transforms.Image2SementicLabel
+                  init_args:
+                    num_classes: 21
+            transforms: null
         split: 0.2
         seed: 42
         train: false
     test_datasets:
-      class_path: pytorchlab.utils.data.SplitDataset
+      class_path: torchvision.datasets.VOCSegmentation
       init_args:
-        dataset:
-          class_path: pytorchlab.datasets.SegmentationDataset
+        root: dataset
+        year: '2012'
+        image_set: val
+        download: false
+        transform:
+          class_path: torchvision.transforms.Compose
           init_args:
-            root: dataset/ISBI_2012/train
-            images: images
-            segmentations: label
-            transform:
-              class_path: torchvision.transforms.Compose
+            transforms:
+            - class_path: torchvision.transforms.Resize
               init_args:
-                transforms:
-                - class_path: torchvision.transforms.ToTensor
-            target_transform: null
-        split: 0.2
-        seed: 42
-        train: false
+                size:
+                - 512
+                - 512
+            - class_path: torchvision.transforms.ToTensor
+        target_transform:
+          class_path: torchvision.transforms.Compose
+          init_args:
+            transforms:
+            - class_path: torchvision.transforms.Resize
+              init_args:
+                size:
+                - 512
+                - 512
+            - class_path: pytorchlab.transforms.Image2SementicLabel
+              init_args:
+                num_classes: 21
+        transforms: null
     predict_datasets: null
-    batch_size: 1
+    batch_size: 4
     num_workers: 4
     pin_memory: true
     drop_last: false
     collate_fn:
       class_path: pytorchlab.datasets.SegmentationCollateFn
 model:
-  class_path: pytorchlab.experiments.unet.UNetModule
+  class_path: pytorchlab.experiments.unet.UnetModule
   init_args:
-    in_channels: 1
-    num_classes: 1
+    in_channels: 3
+    num_classes: 21
+    features:
+    - 64
+    - 128
+    - 256
+    - 512
     bilinear: false
     lr: 0.0001

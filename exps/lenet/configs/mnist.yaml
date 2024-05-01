@@ -108,7 +108,7 @@ data:
     pin_memory: true
     drop_last: false
     collate_fn:
-      class_path: pytorchlab.datasets.ClassifyCollateFn
+      class_path: pytorchlab.datasets.ClassificationCollateFn
 model:
   class_path: pytorchlab.experiments.lenet.LeNet5Module
   init_args:

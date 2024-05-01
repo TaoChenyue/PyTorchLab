@@ -4,7 +4,7 @@
 
 ![GitHub issues](https://img.shields.io/github/issues/TaoChenyue/PyTorchLab)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/TaoChenyue/PyTorchLab)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
+[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](/LICENSE)
 ![PyPI - Status](https://img.shields.io/pypi/status/pytorchlab)
 </div>
 
@@ -22,14 +22,5 @@ cd PyTorchLab
 pip install -e .
 ```
 
-## Datasets 
-
-
-| Dataset                                                               | [BaiduNetDisk(Code: mqvi)](https://pan.baidu.com/s/1GFrlHWzVxKI8HoCbWTUfGw?pwd=mqvi) |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| [Pascal-VOC](http://host.robots.ox.ac.uk/pascal/VOC/)                 | PASCAL-VOC                                                                           |
-| [CUB-200-2011](https://www.vision.caltech.edu/datasets/cub_200_2011/) | CUB                                                                                  |
-| [LSRW](https://arxiv.org/abs/2106.14501)                              | LSRW                                                                                 |
-| [LOL](https://daooshee.github.io/BMVC2018website/)                    | LOL                                                                                  |
-| [Birds&Insects](https://doi.org/10.1109/ICIP.2016.7532820)            | Birds&Insects                                                                        |
-| [ISBI2012](https://github.com/decouples/Unet)                         | ISBI_2012.zip                                                                        |
+# Datasets
+Some datasets can be downloaded from [BaiduNetDisk(Code: mqvi)](https://pan.baidu.com/s/1GFrlHWzVxKI8HoCbWTUfGw?pwd=mqvi).

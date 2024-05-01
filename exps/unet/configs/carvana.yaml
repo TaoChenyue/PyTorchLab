@@ -10,7 +10,7 @@ trainer:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
       save_dir: logs/unet
-      name: pascal-voc2012
+      name: carvana
       version: null
       log_graph: false
       default_hp_metric: true
@@ -85,35 +85,27 @@ data:
       class_path: pytorchlab.utils.data.SplitDataset
       init_args:
         dataset:
-          class_path: torchvision.datasets.VOCSegmentation
+          class_path: pytorchlab.datasets.SegmentationDataset
           init_args:
-            root: dataset
-            year: '2012'
-            image_set: train
-            download: false
+            root: dataset/Carvana
+            images: _meta/train_images.txt
+            segmentations: _meta/train_masks.txt
             transform:
               class_path: torchvision.transforms.Compose
               init_args:
                 transforms:
-                - class_path: torchvision.transforms.CenterCrop
+                - class_path: torchvision.transforms.Resize
                   init_args:
-                    size:
-                    - 512
-                    - 512
+                    size: [160,240]
                 - class_path: torchvision.transforms.ToTensor
-            target_transform:
+            target_transform: 
               class_path: torchvision.transforms.Compose
               init_args:
                 transforms:
-                - class_path: torchvision.transforms.CenterCrop
+                - class_path: torchvision.transforms.Resize
                   init_args:
-                    size:
-                    - 512
-                    - 512
+                    size: [160,240]
                 - class_path: pytorchlab.transforms.Image2SementicLabel
-                  init_args:
-                    num_classes: 21
-            transforms: null
         split: 0.2
         seed: 42
         train: true
@@ -121,79 +113,74 @@ data:
       class_path: pytorchlab.utils.data.SplitDataset
       init_args:
         dataset:
-          class_path: torchvision.datasets.VOCSegmentation
+          class_path: pytorchlab.datasets.SegmentationDataset
           init_args:
-            root: dataset
-            year: '2012'
-            image_set: train
-            download: false
+            root: dataset/Carvana
+            images: _meta/train_images.txt
+            segmentations: _meta/train_masks.txt
             transform:
               class_path: torchvision.transforms.Compose
               init_args:
                 transforms:
-                - class_path: torchvision.transforms.CenterCrop
+                - class_path: torchvision.transforms.Resize
                   init_args:
-                    size:
-                    - 512
-                    - 512
+                    size: [160,240]
                 - class_path: torchvision.transforms.ToTensor
-            target_transform:
+            target_transform: 
               class_path: torchvision.transforms.Compose
               init_args:
                 transforms:
-                - class_path: torchvision.transforms.CenterCrop
+                - class_path: torchvision.transforms.Resize
                   init_args:
-                    size:
-                    - 512
-                    - 512
+                    size: [160,240]
                 - class_path: pytorchlab.transforms.Image2SementicLabel
-                  init_args:
-                    num_classes: 21
-            transforms: null
         split: 0.2
         seed: 42
         train: false
     test_datasets:
-      class_path: torchvision.datasets.VOCSegmentation
+      class_path: pytorchlab.utils.data.SplitDataset
       init_args:
-        root: dataset
-        year: '2012'
-        image_set: val
-        download: false
-        transform:
-          class_path: torchvision.transforms.Compose
+        dataset:
+          class_path: pytorchlab.datasets.SegmentationDataset
           init_args:
-            transforms:
-            - class_path: torchvision.transforms.CenterCrop
+            root: dataset/Carvana
+            images: _meta/train_images.txt
+            segmentations: _meta/train_masks.txt
+            transform:
+              class_path: torchvision.transforms.Compose
               init_args:
-                size:
-                - 512
-                - 512
-            - class_path: torchvision.transforms.ToTensor
-        target_transform:
-          class_path: torchvision.transforms.Compose
-          init_args:
-            transforms:
-            - class_path: torchvision.transforms.CenterCrop
+                transforms:
+                - class_path: torchvision.transforms.Resize
+                  init_args:
+                    size: [160,240]
+                - class_path: torchvision.transforms.ToTensor
+            target_transform: 
+              class_path: torchvision.transforms.Compose
               init_args:
-                size:
-                - 512
-                - 512
-            - class_path: pytorchlab.transforms.Image2SementicLabel
-              init_args:
-                num_classes: 21
-        transforms: null
+                transforms:
+                - class_path: torchvision.transforms.Resize
+                  init_args:
+                    size: [160,240]
+                - class_path: pytorchlab.transforms.Image2SementicLabel
+        split: 0.2
+        seed: 42
+        train: false
     predict_datasets: null
-    batch_size: 4
+    batch_size: 8
     num_workers: 4
     pin_memory: true
     drop_last: false
     collate_fn:
       class_path: pytorchlab.datasets.SegmentationCollateFn
 model:
-  class_path: pytorchlab.experiments.unet.UNetModule
+  class_path: pytorchlab.experiments.unet.UnetModule
   init_args:
     in_channels: 3
-    num_classes: 21
+    num_classes: 1
+    features:
+    - 64
+    - 128
+    - 256
+    - 512
     bilinear: false
     lr: 0.0001
