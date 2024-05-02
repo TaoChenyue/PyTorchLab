@@ -49,6 +49,7 @@ class ImageGenerationDataset(Dataset):
             if img_path.is_dir():
                 return [x for x in img_path.iterdir()]
             else:
+                img_path = Path(images)
                 assert img_path.suffix in [".yml", ".yaml"], "Only support yaml format"
                 return yaml.safe_load(open(img_path, "r"))
         elif isinstance(images, list):

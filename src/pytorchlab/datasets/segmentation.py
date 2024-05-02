@@ -57,7 +57,10 @@ class SegmentationDataset(Dataset):
     def load_imgs(self, path: str | list[str]) -> list[Path]:
         if isinstance(path, str):
             img_path = self.root / path
-            if img_path.is_file():
+            if img_path.is_dir():
+                img_paths = sorted([x for x in img_path.rglob("*") if x.is_file()])
+            else:
+                img_path = Path(path)
                 if img_path.suffix in [".yaml", ".yml"]:
                     img_paths = yaml.safe_load(open(img_path))
                     img_paths = [self.root / x for x in img_paths]
@@ -68,8 +71,6 @@ class SegmentationDataset(Dataset):
                     return img_paths
                 else:
                     raise ValueError(f"Unsupported file format: {img_path.suffix}")
-            else:
-                img_paths = [x for x in img_path.rglob("*") if x.is_file()]
         else:
             img_paths = [self.root / x for x in path]
         return img_paths
