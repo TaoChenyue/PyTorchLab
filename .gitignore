@@ -160,17 +160,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
+# PyTorchLab
 # logs
-*logs
-
-# dataset
-/dataset/
-# dataset soft link
-/dataset
-
-# test
-test*.yaml
-/test
-
-# visualize
-output/
+/*logs
+# datasets
+/datasets
+# tmp
+/tmp

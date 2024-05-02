@@ -69,7 +69,7 @@ data:
         dataset:
           class_path: torchvision.datasets.MNIST
           init_args:
-            root: dataset
+            root: datasets
             train: true
             transform:
               class_path: torchvision.transforms.ToTensor
@@ -84,7 +84,7 @@ data:
         dataset:
           class_path: torchvision.datasets.MNIST
           init_args:
-            root: dataset
+            root: datasets
             train: true
             transform:
               class_path: torchvision.transforms.ToTensor
@@ -96,7 +96,7 @@ data:
     test_datasets:
       class_path: torchvision.datasets.MNIST
       init_args:
-        root: dataset
+        root: datasets
         train: false
         transform:
           class_path: torchvision.transforms.ToTensor

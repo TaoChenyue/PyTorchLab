@@ -1,6 +1,6 @@
 [project]
 name = "PyTorchLab"
-version = "0.0.1.dev"
+version = "0.0.2.dev"
 description = "Realize code in AI field with PyTorch and Lightning."
 authors = [{ name = "TaoChenyue", email = "chenyue.Tao@qq.com" }]
 dependencies = [
@@ -18,8 +18,6 @@ readme = "README.md"
 license = { text = "GPLv3" }
 # select from https://pypi.org/classifiers/
 classifiers = [
-    "Private :: Do Not Upload",
-    "Development Status :: 1 - Planning",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Operating System :: POSIX :: Linux",

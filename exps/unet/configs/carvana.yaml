@@ -87,9 +87,9 @@ data:
         dataset:
           class_path: pytorchlab.datasets.SegmentationDataset
           init_args:
-            root: dataset/Carvana
-            images: _meta/train_images.txt
-            segmentations: _meta/train_masks.txt
+            root: datasets/Carvana
+            images: train_hq
+            segmentations: train_masks
             transform:
               class_path: torchvision.transforms.Compose
               init_args:
@@ -115,9 +115,9 @@ data:
         dataset:
           class_path: pytorchlab.datasets.SegmentationDataset
           init_args:
-            root: dataset/Carvana
-            images: _meta/train_images.txt
-            segmentations: _meta/train_masks.txt
+            root: datasets/Carvana
+            images: train_hq
+            segmentations: train_masks
             transform:
               class_path: torchvision.transforms.Compose
               init_args:
@@ -143,9 +143,9 @@ data:
         dataset:
           class_path: pytorchlab.datasets.SegmentationDataset
           init_args:
-            root: dataset/Carvana
-            images: _meta/train_images.txt
-            segmentations: _meta/train_masks.txt
+            root: datasets/Carvana
+            images: train_hq
+            segmentations: train_masks
             transform:
               class_path: torchvision.transforms.Compose
               init_args:

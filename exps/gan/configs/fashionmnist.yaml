@@ -73,7 +73,7 @@ data:
     train_datasets:
       class_path: torchvision.datasets.FashionMNIST
       init_args:
-        root: dataset
+        root: datasets
         train: true
         transform:
           class_path: torchvision.transforms.ToTensor

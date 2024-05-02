@@ -9,8 +9,8 @@ trainer:
   logger:
     class_path: lightning.pytorch.loggers.TensorBoardLogger
     init_args:
-      save_dir: logs/pix2pix
-      name: edges2shoes
+      save_dir: logs/cyclegan
+      name: horse2zebra
       version: null
       log_graph: false
       default_hp_metric: true
@@ -26,9 +26,14 @@ trainer:
   - class_path: pytorchlab.callbacks.ImageLabelCallback
     init_args:
       image_names:
-      - - image
-        - generation
-      - - generation
+      - - real_A
+        - real_B
+      - - fake_A
+        - fake_B
+        - rec_A
+        - rec_B
+        - idt_A
+        - idt_B
       label_names:
       - []
       - []
@@ -42,7 +47,7 @@ trainer:
       scale_each: false
       pad_value: 0.0
   fast_dev_run: false
-  max_epochs: 100
+  max_epochs: 1000
   min_epochs: null
   max_steps: -1
   min_steps: null
@@ -80,108 +85,89 @@ data:
     train_datasets:
       class_path: pytorchlab.datasets.ImageGenerationDataset
       init_args:
-        root: datasets/edges2shoes
-        images: train
-        generations: train
+        root: datasets/horse2zebra/train
+        images: horse
+        generations: zebra
         transform:
           class_path: torchvision.transforms.Compose
           init_args:
             transforms:
-            - class_path: pytorchlab.transforms.ImageCrop
-              init_args:
-                box: [0,0,256,256]
-            - class_path: torchvision.transforms.Grayscale
-              init_args:
-                num_output_channels: 1
+            - class_path: pytorchlab.transforms.ImageRGB
             - class_path: torchvision.transforms.ToTensor
-        target_transform: 
-          class_path: torchvision.transforms.Compose
-          init_args:
-            transforms:
-            - class_path: pytorchlab.transforms.ImageCrop
-              init_args:
-                box: [256,0,512,256]
-            - class_path: torchvision.transforms.ToTensor
-        use_random: false
+        target_transform: null
+        use_random: true
     val_datasets:
       class_path: pytorchlab.datasets.ImageGenerationDataset
       init_args:
-        root: datasets/edges2shoes
-        images: val
-        generations: val
+        root: datasets/horse2zebra/test
+        images: horse
+        generations: zebra
         transform:
           class_path: torchvision.transforms.Compose
           init_args:
             transforms:
-            - class_path: pytorchlab.transforms.ImageCrop
-              init_args:
-                box: [0,0,256,256]
-            - class_path: torchvision.transforms.Grayscale
-              init_args:
-                num_output_channels: 1
+            - class_path: pytorchlab.transforms.ImageRGB
             - class_path: torchvision.transforms.ToTensor
-        target_transform: 
-          class_path: torchvision.transforms.Compose
-          init_args:
-            transforms:
-            - class_path: pytorchlab.transforms.ImageCrop
-              init_args:
-                box: [256,0,512,256]
-            - class_path: torchvision.transforms.ToTensor
-        use_random: false
+        target_transform: null
+        use_random: true
     test_datasets:
       class_path: pytorchlab.datasets.ImageGenerationDataset
       init_args:
-        root: datasets/edges2shoes
-        images: val
-        generations: val
+        root: datasets/horse2zebra/test
+        images: horse
+        generations: zebra
         transform:
           class_path: torchvision.transforms.Compose
           init_args:
             transforms:
-            - class_path: pytorchlab.transforms.ImageCrop
-              init_args:
-                box: [0,0,256,256]
-            - class_path: torchvision.transforms.Grayscale
-              init_args:
-                num_output_channels: 1
+            - class_path: pytorchlab.transforms.ImageRGB
             - class_path: torchvision.transforms.ToTensor
-        target_transform: 
-          class_path: torchvision.transforms.Compose
-          init_args:
-            transforms:
-            - class_path: pytorchlab.transforms.ImageCrop
-              init_args:
-                box: [256,0,512,256]
-            - class_path: torchvision.transforms.ToTensor
-        use_random: false
+        target_transform: null
+        use_random: true
     predict_datasets: null
-    batch_size: 16
+    batch_size: 8
     num_workers: 4
     pin_memory: true
     drop_last: false
     collate_fn:
       class_path: pytorchlab.datasets.ImageGenerationCollateFn
 model:
-  class_path: pytorchlab.experiments.pix2pix.Pix2PixModule
+  class_path: pytorchlab.experiments.cyclegan.CycleGANModule
   init_args:
-    generator:
-      class_path: pytorchlab.experiments.pix2pix.torch_model.UnetGenerator
+    generator_a:
+      class_path: pytorchlab.experiments.cyclegan.ResidualGenerator
       init_args:
-        in_channels: 1
+        in_channels: 3
         out_channels: 3
         features:
         - 64
         - 128
         - 256
-        - 512
-        - 512
-        - 512
-        - 512
-    discriminator:
-      class_path: pytorchlab.experiments.pix2pix.torch_model.PixelDiscriminator
+        num_residual_blocks: 9
+    generator_b:
+      class_path: pytorchlab.experiments.cyclegan.ResidualGenerator
       init_args:
-        in_channels: 4
+        in_channels: 3
+        out_channels: 3
+        features:
+        - 64
+        - 128
+        - 256
+        num_residual_blocks: 9
+    discriminator_a:
+      class_path: pytorchlab.experiments.cyclegan.NlayerDiscriminator
+      init_args:
+        in_channels: 3
+        features:
+        - 64
+        - 128
+        - 256
+        - 128
+        - 64
+    discriminator_b:
+      class_path: pytorchlab.experiments.cyclegan.NlayerDiscriminator
+      init_args:
+        in_channels: 3
         features:
         - 64
         - 128
@@ -189,7 +175,7 @@ model:
         - 128
         - 64
     criterion_g:
-      class_path: pytorchlab.experiments.pix2pix.criterions.GeneratorLoss
+      class_path: pytorchlab.experiments.cyclegan.criterions.GeneratorLoss
       init_args:
         criterion_gan:
           class_path: torch.nn.BCEWithLogitsLoss
@@ -199,16 +185,23 @@ model:
             reduce: null
             reduction: mean
             pos_weight: null
-        criterion_image:
+        criterion_cycle:
+          class_path: torch.nn.L1Loss
+          init_args:
+            size_average: null
+            reduce: null
+            reduction: mean
+        criterion_identity:
           class_path: torch.nn.L1Loss
           init_args:
             size_average: null
             reduce: null
             reduction: mean
         lambda_gan: 1.0
-        lambda_image: 100.0
+        lambda_cycle: 10.0
+        lambda_identity: 5.0
     criterion_d:
-      class_path: pytorchlab.experiments.pix2pix.criterions.DiscriminatorLoss
+      class_path: pytorchlab.experiments.cyclegan.criterions.DiscriminatorLoss
       init_args:
         criterion:
           class_path: torch.nn.BCEWithLogitsLoss
@@ -221,7 +214,7 @@ model:
     optimizer_g:
       class_path: torch.optim.Adam
       init_args:
-        lr: 0.0001
+        lr: 0.0002
         betas:
         - 0.5
         - 0.999

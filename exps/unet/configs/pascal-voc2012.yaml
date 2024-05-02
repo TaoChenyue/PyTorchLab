@@ -87,7 +87,7 @@ data:
         dataset:
           class_path: torchvision.datasets.VOCSegmentation
           init_args:
-            root: dataset
+            root: datasets
             year: '2012'
             image_set: train
             download: false
@@ -123,7 +123,7 @@ data:
         dataset:
           class_path: torchvision.datasets.VOCSegmentation
           init_args:
-            root: dataset
+            root: datasets
             year: '2012'
             image_set: train
             download: false
@@ -156,7 +156,7 @@ data:
     test_datasets:
       class_path: torchvision.datasets.VOCSegmentation
       init_args:
-        root: dataset
+        root: datasets
         year: '2012'
         image_set: val
         download: false
