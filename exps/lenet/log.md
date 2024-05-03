@@ -6,7 +6,7 @@
 - [ ] CIFAR100
 ## MNIST
 ```shell
-python main.py fit -c exps/lenet/configs/mnist.yaml
+pytorchlab fit -c exps/lenet/configs/mnist.yaml
 ```
 | epoch | accuracy | auroc  | f1score | precision | recall |
 | :---: | :------: | :----: | :-----: | :-------: | :----: |

@@ -7,6 +7,6 @@
 ## experiments
 ### MNIST
 ```shell
-python main.py fit -c exps/acgan/configs/mnist.yaml
+pytorchlab fit -c exps/acgan/configs/mnist.yaml
 ```
 ![alt text](images/mnist.gif)

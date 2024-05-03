@@ -7,11 +7,11 @@
 ## experiments
 ### MNIST
 ```shell
-python main.py fit -c exps/gan/configs/mnist.yaml
+pytorchlab fit -c exps/gan/configs/mnist.yaml
 ```
 ![alt text](images/mnist.gif)
 ### FashionMNIST
 ```shell
-python main.py fit -c exps/gan/configs/fashionmnist.yaml
+pytorchlab fit -c exps/gan/configs/fashionmnist.yaml
 ```
 ![alt text](images/fashionmnist.gif)

@@ -7,7 +7,7 @@
 ## experiments
 ### Carvana
 ```shell
-python main.py fit -c exps/unet/configs/carvana.yaml
+pytorchlab fit -c exps/unet/configs/carvana.yaml
 ```
 input image example:
 ![alt text](images/carvana/input_image.png)

@@ -8,6 +8,6 @@
 ## experiments
 ### MNIST
 ```shell
-python main.py fit -c exps/dcgan/configs/mnist.yaml
+pytorchlab fit -c exps/dcgan/configs/mnist.yaml
 ```
 ![alt text](images/mnist.gif)

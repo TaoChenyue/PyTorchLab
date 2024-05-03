@@ -9,7 +9,7 @@
 ## experiments
 ### edges2shoes
 ```shell
-python main.py fit -c exps/pix2pix/configs/edges2shoes.yaml
+pytorchlab fit -c exps/pix2pix/configs/edges2shoes.yaml
 ```
 input image:
 ![alt text](images/edges2shoes/input_image.png)
@@ -19,7 +19,7 @@ output generation:
 ![alt text](images/edges2shoes/output_generation.png)
 ### facades
 ```shell
-python main.py fit -c exps/pix2pix/configs/facades.yaml
+pytorchlab fit -c exps/pix2pix/configs/facades.yaml
 ```
 input image:
 ![alt text](images/facades/input_image.png)
