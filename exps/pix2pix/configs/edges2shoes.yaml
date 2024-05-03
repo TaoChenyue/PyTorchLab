@@ -34,7 +34,7 @@ trainer:
       - []
       batch_idx:
       - 0
-      show_epoch: false
+      show_epoch: true
       nrow: 8
       padding: 2
       normalize: false
@@ -89,18 +89,26 @@ data:
             transforms:
             - class_path: pytorchlab.transforms.ImageCrop
               init_args:
-                box: [0,0,256,256]
+                box:
+                - 0
+                - 0
+                - 256
+                - 256
             - class_path: torchvision.transforms.Grayscale
               init_args:
                 num_output_channels: 1
             - class_path: torchvision.transforms.ToTensor
-        target_transform: 
+        target_transform:
           class_path: torchvision.transforms.Compose
           init_args:
             transforms:
             - class_path: pytorchlab.transforms.ImageCrop
               init_args:
-                box: [256,0,512,256]
+                box:
+                - 256
+                - 0
+                - 512
+                - 256
             - class_path: torchvision.transforms.ToTensor
         use_random: false
     val_datasets:
@@ -115,18 +123,26 @@ data:
             transforms:
             - class_path: pytorchlab.transforms.ImageCrop
               init_args:
-                box: [0,0,256,256]
+                box:
+                - 0
+                - 0
+                - 256
+                - 256
             - class_path: torchvision.transforms.Grayscale
               init_args:
                 num_output_channels: 1
             - class_path: torchvision.transforms.ToTensor
-        target_transform: 
+        target_transform:
           class_path: torchvision.transforms.Compose
           init_args:
             transforms:
             - class_path: pytorchlab.transforms.ImageCrop
               init_args:
-                box: [256,0,512,256]
+                box:
+                - 256
+                - 0
+                - 512
+                - 256
             - class_path: torchvision.transforms.ToTensor
         use_random: false
     test_datasets:
@@ -141,18 +157,26 @@ data:
             transforms:
             - class_path: pytorchlab.transforms.ImageCrop
               init_args:
-                box: [0,0,256,256]
+                box:
+                - 0
+                - 0
+                - 256
+                - 256
             - class_path: torchvision.transforms.Grayscale
               init_args:
                 num_output_channels: 1
             - class_path: torchvision.transforms.ToTensor
-        target_transform: 
+        target_transform:
           class_path: torchvision.transforms.Compose
           init_args:
             transforms:
             - class_path: pytorchlab.transforms.ImageCrop
               init_args:
-                box: [256,0,512,256]
+                box:
+                - 256
+                - 0
+                - 512
+                - 256
             - class_path: torchvision.transforms.ToTensor
         use_random: false
     predict_datasets: null
@@ -249,16 +273,16 @@ model:
         differentiable: false
         fused: null
     lr_g:
-      class_path: torch.optim.lr_scheduler.ConstantLR
+      class_path: torch.optim.lr_scheduler.StepLR
       init_args:
-        factor: 1.0
-        total_iters: 5
+        step_size: 10
+        gamma: 0.1
         last_epoch: -1
         verbose: deprecated
     lr_d:
-      class_path: torch.optim.lr_scheduler.ConstantLR
+      class_path: torch.optim.lr_scheduler.StepLR
       init_args:
-        factor: 1.0
-        total_iters: 5
+        step_size: 10
+        gamma: 0.1
         last_epoch: -1
         verbose: deprecated

@@ -91,8 +91,6 @@ class GANModule(LightningModule):
 
         self.manual_backward(loss_generator)
         optimizer_g.step()
-        lr_g = self.lr_schedulers()[0]
-        lr_g.step()
 
         # train discriminator
         optimizer_d: torch.optim.Optimizer = self.optimizers()[1]
@@ -113,8 +111,6 @@ class GANModule(LightningModule):
         self.manual_backward(loss_discriminator)
         # update discriminator optimizer
         optimizer_d.step()
-        lr_d = self.lr_schedulers()[1]
-        lr_d.step()
 
         return OutputsDict(
             losses={
@@ -124,3 +120,7 @@ class GANModule(LightningModule):
             inputs={"image": batch["image"], "latent_code": z},
             outputs={"image": fake_image},
         )
+
+    def on_train_epoch_end(self) -> None:
+        for lr_scheduler in self.lr_schedulers():
+            lr_scheduler.step()

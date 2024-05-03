@@ -91,8 +91,6 @@ class Pix2PixModule(LightningModule):
         if train:
             self.manual_backward(g_loss)
             optimizer_g.step()
-            lr_g = self.lr_schedulers()[0]
-            lr_g.step()
 
         if train:
             # train discriminator
@@ -111,8 +109,6 @@ class Pix2PixModule(LightningModule):
         if train:
             self.manual_backward(d_loss)
             optimizer_d.step()
-            lr_d = self.lr_schedulers()[1]
-            lr_d.step()
 
         return OutputsDict(
             losses={"g_loss": g_loss, "d_loss": d_loss},
@@ -127,6 +123,10 @@ class Pix2PixModule(LightningModule):
 
     def training_step(self, batch, batch_idx):
         return self._step(batch, train=True)
+
+    def on_train_epoch_end(self) -> None:
+        for lr_scheduler in self.lr_schedulers():
+            lr_scheduler.step()
 
     def validation_step(
         self,

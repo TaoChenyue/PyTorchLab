@@ -12,10 +12,12 @@ class ResidualBlock(nn.Module):
     def __init__(self, in_channels: int):
         super().__init__()
         self.model = nn.Sequential(
-            nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
+            nn.ReflectionPad2d(padding=1),
+            nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1),
             nn.InstanceNorm2d(in_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
+            nn.ReflectionPad2d(padding=1),
+            nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1),
             nn.InstanceNorm2d(in_channels),
         )
 
@@ -27,7 +29,7 @@ class Down(nn.Module):
     def __init__(self, in_channels: int, out_channels: int) -> None:
         super().__init__()
         self.model = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels, out_channels, kernel_size=4, stride=2, padding=1),
             nn.InstanceNorm2d(out_channels),
             nn.ReLU(inplace=True),
         )
@@ -40,8 +42,9 @@ class Up(nn.Module):
     def __init__(self, in_channels: int, out_channels: int) -> None:
         super().__init__()
         self.model = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True),
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
+            nn.ConvTranspose2d(
+                in_channels, out_channels, kernel_size=4, stride=2, padding=1
+            ),
             nn.InstanceNorm2d(out_channels),
             nn.ReLU(inplace=True),
         )
@@ -62,7 +65,8 @@ class ResidualGenerator(nn.Module):
         self.downs = nn.ModuleList()
         self.downs.append(
             nn.Sequential(
-                nn.Conv2d(in_channels, features[0], kernel_size=3, stride=1, padding=1),
+                nn.ReflectionPad2d(padding=3),
+                nn.Conv2d(in_channels, features[0], kernel_size=7),
                 nn.InstanceNorm2d(features[0]),
                 nn.ReLU(inplace=True),
             )
@@ -80,7 +84,8 @@ class ResidualGenerator(nn.Module):
 
         self.ups.append(
             nn.Sequential(
-                nn.Conv2d(features[0], out_channels, 3, 1, 1),
+                nn.ReflectionPad2d(3),
+                nn.Conv2d(features[0], out_channels, 7),
                 nn.Tanh(),
             )
         )
@@ -101,15 +106,13 @@ class ResidualGenerator(nn.Module):
 
 
 class NlayerDiscriminator(nn.Module):
-    def __init__(
-        self, in_channels: int = 3, features: list[int] = [64, 128, 256, 128, 64]
-    ):
+    def __init__(self, in_channels: int = 3, features: list[int] = [64, 128, 256, 512]):
         super().__init__()
         self.model = nn.ModuleList()
         for feature in features:
             self.model.append(
                 nn.Sequential(
-                    nn.Conv2d(in_channels, feature, kernel_size=3, stride=2, padding=1),
+                    nn.Conv2d(in_channels, feature, kernel_size=4, stride=2, padding=1),
                     nn.InstanceNorm2d(feature),
                     nn.ReLU(inplace=True),
                 )
