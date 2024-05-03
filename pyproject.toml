@@ -49,3 +49,6 @@ format = { composite = [
     "isort {args}",
     "black {args}",
 ] }
+
+[project.scripts]
+pytorchlab = "pytorchlab.utils.cli:cli"
