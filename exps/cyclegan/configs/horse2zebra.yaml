@@ -273,22 +273,16 @@ model:
         differentiable: false
         fused: null
     lr_g:
-      class_path: torch.optim.lr_scheduler.LambdaLR
+      class_path: torch.optim.lr_scheduler.StepLR
       init_args:
-        lr_lambda:
-          class_path: pytorchlab.experiments.cyclegan.LambdaLR
-          init_args:
-            n_epochs: 200
-            decay_start_epoch: 100
+        step_size: 10
+        gamma: 0.5
         last_epoch: -1
         verbose: deprecated
     lr_d:
-      class_path: torch.optim.lr_scheduler.LambdaLR
+      class_path: torch.optim.lr_scheduler.StepLR
       init_args:
-        lr_lambda:
-          class_path: pytorchlab.experiments.cyclegan.LambdaLR
-          init_args:
-            n_epochs: 200
-            decay_start_epoch: 100
+        step_size: 10
+        gamma: 0.5
         last_epoch: -1
         verbose: deprecated
